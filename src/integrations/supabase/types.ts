@@ -139,6 +139,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          subscription_plan: string | null
           updated_at: string | null
         }
         Insert: {
@@ -148,6 +149,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          subscription_plan?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -157,9 +159,93 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          subscription_plan?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          discount_percent: number
+          id: string
+          is_active: boolean
+          usage_limit: number | null
+          used_count: number
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          discount_percent: number
+          id?: string
+          is_active?: boolean
+          usage_limit?: number | null
+          used_count?: number
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          discount_percent?: number
+          id?: string
+          is_active?: boolean
+          usage_limit?: number | null
+          used_count?: number
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_type: string
+          promo_code_used: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type: string
+          promo_code_used?: string | null
+          status: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string
+          promo_code_used?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_promo_code_used_fkey"
+            columns: ["promo_code_used"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["code"]
+          },
+        ]
       }
     }
     Views: {
@@ -170,7 +256,15 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: number
       }
+      get_monthly_analysis_limit: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
       get_monthly_evaluation_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      get_monthly_evaluation_limit: {
         Args: { user_uuid: string }
         Returns: number
       }

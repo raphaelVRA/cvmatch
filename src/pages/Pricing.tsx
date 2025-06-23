@@ -1,9 +1,14 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle, Target, ArrowLeft, Zap, Users, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
+import CheckoutForm from "@/components/CheckoutForm";
 
 const pricingPlans = [
   {
@@ -13,6 +18,7 @@ const pricingPlans = [
     icon: Users,
     color: "from-blue-500 to-blue-600",
     popular: false,
+    planType: "free" as const,
     features: [
       "3 analyses de CV par mois",
       "Score de compatibilité détaillé",
@@ -35,6 +41,7 @@ const pricingPlans = [
     icon: Zap,
     color: "from-green-500 to-green-600",
     popular: true,
+    planType: "startup" as const,
     features: [
       "50 analyses de CV par mois",
       "Jusqu'à 5 postes différents",
@@ -55,6 +62,7 @@ const pricingPlans = [
     icon: Crown,
     color: "from-purple-500 to-purple-600",
     popular: false,
+    planType: "business" as const,
     features: [
       "200 analyses de CV par mois",
       "Postes illimités",
@@ -71,6 +79,30 @@ const pricingPlans = [
 ];
 
 const Pricing = () => {
+  const { user } = useAuth();
+  const { subscription, openCustomerPortal } = useSubscription();
+  const [selectedPlan, setSelectedPlan] = useState<'startup' | 'business' | null>(null);
+
+  const handlePlanClick = (plan: typeof pricingPlans[0]) => {
+    if (!user) {
+      window.location.href = '/auth';
+      return;
+    }
+
+    if (plan.planType === 'free') {
+      window.location.href = '/candidate';
+      return;
+    }
+
+    if (plan.planType === 'startup' || plan.planType === 'business') {
+      setSelectedPlan(plan.planType);
+    }
+  };
+
+  const handleManageSubscription = () => {
+    openCustomerPortal();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Header */}
@@ -85,12 +117,19 @@ const Pricing = () => {
                 CVMatch
               </h1>
             </Link>
-            <Button variant="outline" asChild>
-              <Link to="/">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour
-              </Link>
-            </Button>
+            <div className="flex items-center space-x-4">
+              {user && subscription.plan !== 'free' && (
+                <Button variant="outline" onClick={handleManageSubscription}>
+                  Gérer mon abonnement
+                </Button>
+              )}
+              <Button variant="outline" asChild>
+                <Link to="/">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -108,23 +147,40 @@ const Pricing = () => {
             Que vous soyez candidat en recherche d'emploi ou recruteur, nous avons la solution adaptée à vos besoins. 
             Commencez gratuitement et évoluez selon votre usage.
           </p>
+          {user && subscription.plan !== 'free' && (
+            <div className="mt-6">
+              <Badge className="bg-green-100 text-green-800">
+                Plan actuel: {subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)}
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Pricing Cards */}
         <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
           {pricingPlans.map((plan, index) => {
             const IconComponent = plan.icon;
+            const isCurrentPlan = user && subscription.plan === plan.planType;
+            
             return (
               <Card 
                 key={index} 
                 className={`relative border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ${
                   plan.popular ? 'scale-105 ring-2 ring-green-500' : ''
-                }`}
+                } ${isCurrentPlan ? 'ring-2 ring-blue-500' : ''}`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-green-500 text-white px-4 py-1">
                       ⭐ Plus populaire
+                    </Badge>
+                  </div>
+                )}
+                
+                {isCurrentPlan && (
+                  <div className="absolute -top-4 right-4">
+                    <Badge className="bg-blue-500 text-white px-3 py-1">
+                      Votre plan
                     </Badge>
                   </div>
                 )}
@@ -174,15 +230,16 @@ const Pricing = () => {
                   {/* CTA Button */}
                   <Button 
                     className={`w-full py-6 text-lg ${
-                      plan.popular 
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
-                        : `bg-gradient-to-r ${plan.color} hover:opacity-90`
+                      isCurrentPlan 
+                        ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed'
+                        : plan.popular 
+                          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
+                          : `bg-gradient-to-r ${plan.color} hover:opacity-90`
                     }`}
-                    asChild
+                    onClick={() => handlePlanClick(plan)}
+                    disabled={isCurrentPlan}
                   >
-                    <Link to={plan.link}>
-                      {plan.cta}
-                    </Link>
+                    {isCurrentPlan ? 'Plan actuel' : plan.cta}
                   </Button>
                 </CardContent>
               </Card>
@@ -270,6 +327,21 @@ const Pricing = () => {
           </Card>
         </div>
       </div>
+
+      {/* Checkout Dialog */}
+      <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Finaliser votre abonnement</DialogTitle>
+          </DialogHeader>
+          {selectedPlan && (
+            <CheckoutForm 
+              planType={selectedPlan} 
+              onClose={() => setSelectedPlan(null)} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
