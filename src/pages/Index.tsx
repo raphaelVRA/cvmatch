@@ -1,7 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Target, FileText, Users, BarChart3, Zap, Shield, Clock, LogOut } from "lucide-react";
+import { CheckCircle, Target, FileText, Users, BarChart3, Zap, Shield, Clock, LogOut, Upload, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
