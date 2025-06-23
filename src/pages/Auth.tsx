@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Target, ArrowLeft, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,33 +24,71 @@ const Auth = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { signUp, signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulation de l'authentification
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    if (isLogin) {
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue sur CVMatch !",
-      });
-    } else {
-      if (formData.password !== formData.confirmPassword) {
-        toast({
-          title: "Erreur",
-          description: "Les mots de passe ne correspondent pas.",
-          variant: "destructive",
+    try {
+      if (isLogin) {
+        const { error } = await signIn(formData.email, formData.password);
+        if (error) {
+          toast({
+            title: "Erreur de connexion",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Connexion réussie",
+            description: "Bienvenue sur CVMatch !",
+          });
+          navigate('/');
+        }
+      } else {
+        if (formData.password !== formData.confirmPassword) {
+          toast({
+            title: "Erreur",
+            description: "Les mots de passe ne correspondent pas.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        const { error } = await signUp(formData.email, formData.password, {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          accountType: formData.accountType
         });
-        setIsLoading(false);
-        return;
+        
+        if (error) {
+          toast({
+            title: "Erreur d'inscription",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Compte créé avec succès",
+            description: "Vérifiez votre email pour confirmer votre compte.",
+          });
+          setIsLogin(true);
+        }
       }
-      
+    } catch (error: any) {
       toast({
-        title: "Compte créé avec succès",
-        description: "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite.",
+        variant: "destructive",
       });
     }
 

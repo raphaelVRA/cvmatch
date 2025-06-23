@@ -9,13 +9,171 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cv_analyses: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          id: string
+          improvements: string[] | null
+          matched_keywords: string[] | null
+          missing_keywords: string[] | null
+          position_type: string
+          score: number
+          strengths: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          id?: string
+          improvements?: string[] | null
+          matched_keywords?: string[] | null
+          missing_keywords?: string[] | null
+          position_type: string
+          score: number
+          strengths?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          id?: string
+          improvements?: string[] | null
+          matched_keywords?: string[] | null
+          missing_keywords?: string[] | null
+          position_type?: string
+          score?: number
+          strengths?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cv_evaluations: {
+        Row: {
+          created_at: string | null
+          education: string | null
+          experience: string | null
+          file_name: string
+          id: string
+          job_posting_id: string
+          matched_keywords: string[] | null
+          missing_keywords: string[] | null
+          rank: number | null
+          score: number
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          education?: string | null
+          experience?: string | null
+          file_name: string
+          id?: string
+          job_posting_id: string
+          matched_keywords?: string[] | null
+          missing_keywords?: string[] | null
+          rank?: number | null
+          score: number
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          education?: string | null
+          experience?: string | null
+          file_name?: string
+          id?: string
+          job_posting_id?: string
+          matched_keywords?: string[] | null
+          missing_keywords?: string[] | null
+          rank?: number | null
+          score?: number
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_evaluations_job_posting_id_fkey"
+            columns: ["job_posting_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_postings: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          keywords: string | null
+          requirements: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          keywords?: string | null
+          requirements?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          keywords?: string | null
+          requirements?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_type: string
+          created_at: string | null
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_type: string
+          created_at?: string | null
+          email: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_type?: string
+          created_at?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_monthly_analysis_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      get_monthly_evaluation_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

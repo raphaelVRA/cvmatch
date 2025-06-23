@@ -1,11 +1,17 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Upload, Target, BarChart3, Users, Zap, ArrowRight } from "lucide-react";
+import { CheckCircle, Target, FileText, Users, BarChart3, Zap, Shield, Clock, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { user, profile, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Header */}
@@ -20,51 +26,90 @@ const Index = () => {
                 CVMatch
               </h1>
             </div>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/candidate" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Candidats
-              </Link>
-              <Link to="/company" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Entreprises
-              </Link>
-              <Link to="/pricing" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Tarifs
-              </Link>
-              <Button asChild className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
-                <Link to="/auth">Connexion</Link>
-              </Button>
-            </nav>
+            
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-700">
+                    Bonjour, {profile?.first_name || user.email}
+                  </span>
+                  <Badge variant={profile?.account_type === 'candidate' ? 'default' : 'secondary'}>
+                    {profile?.account_type === 'candidate' ? 'Candidat' : 'Entreprise'}
+                  </Badge>
+                  <Button variant="outline" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Déconnexion
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" asChild>
+                    <Link to="/auth">Connexion</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/auth">Commencer</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
+      <section className="py-20 lg:py-32">
+        <div className="container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto">
             <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-100">
-              🚀 L'outil d'analyse CV nouvelle génération
+              ⚡ Analyse CV en quelques secondes
             </Badge>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent">
-              Analysez et matchez vos CV en quelques secondes
+            
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              Analysez et matchez vos <span className="bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">CV</span> en quelques secondes
             </h1>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              CVMatch révolutionne le recrutement en analysant automatiquement la compatibilité entre les CV et vos offres d'emploi. 
-              Gagnez du temps, trouvez les meilleurs profils.
+            
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              CVMatch révolutionne le recrutement en analysant automatiquement la compatibilité entre les CV et vos offres d'emploi. Gagnez du temps, trouvez les meilleurs profils.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-lg px-8 py-6" asChild>
-                <Link to="/candidate">
-                  <Upload className="w-5 h-5 mr-2" />
-                  Tester mon CV (Gratuit)
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-2 hover:bg-gray-50" asChild>
-                <Link to="/company">
-                  <Users className="w-5 h-5 mr-2" />
-                  Solution Entreprise
-                </Link>
-              </Button>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {user ? (
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {profile?.account_type === 'candidate' ? (
+                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-lg px-8 py-6" asChild>
+                      <Link to="/candidate">
+                        <FileText className="w-5 h-5 mr-2" />
+                        Analyser mon CV
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-lg px-8 py-6" asChild>
+                      <Link to="/company">
+                        <Users className="w-5 h-5 mr-2" />
+                        Analyser des CV
+                      </Link>
+                    </Button>
+                  )}
+                  <Button size="lg" variant="outline" className="text-lg px-8 py-6" asChild>
+                    <Link to="/pricing">
+                      Voir les tarifs
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-lg px-8 py-6" asChild>
+                    <Link to="/auth">
+                      Commencer gratuitement
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" className="text-lg px-8 py-6" asChild>
+                    <Link to="/pricing">
+                      Voir les tarifs
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
