@@ -23,56 +23,74 @@ export interface AnalysisResult {
   confidenceLevel: 'high' | 'medium' | 'low';
 }
 
-// Domaines de compétences avec leurs mots-clés associés
+// Domaines de compétences avec scoring intelligent
 const SKILL_DOMAINS = {
   'tech': {
-    keywords: ['javascript', 'python', 'java', 'react', 'angular', 'vue', 'node.js', 'docker', 'kubernetes', 'aws', 'azure', 'git', 'api', 'database', 'sql', 'mongodb', 'postgresql', 'html', 'css', 'typescript', 'ci/cd', 'devops', 'microservices', 'machine learning', 'ai', 'tensorflow', 'pytorch', 'développement', 'programmation', 'logiciel', 'système', 'informatique', 'algorithme'],
+    keywords: ['javascript', 'python', 'java', 'react', 'angular', 'vue', 'node.js', 'docker', 'kubernetes', 'aws', 'azure', 'git', 'api', 'database', 'sql', 'mongodb', 'postgresql', 'html', 'css', 'typescript', 'ci/cd', 'devops', 'microservices', 'machine learning', 'ai', 'tensorflow', 'pytorch', 'développement', 'programmation', 'logiciel', 'système', 'informatique', 'algorithme', 'frontend', 'backend', 'fullstack', 'web', 'mobile', 'application'],
+    coreKeywords: ['programmation', 'développement', 'informatique', 'logiciel', 'code'],
     weight: 1.0,
-    incompatibleWith: ['healthcare', 'finance']
+    strongIncompatible: ['healthcare-clinical', 'manual-labor'],
+    weakIncompatible: ['finance-traditional']
   },
   'healthcare': {
-    keywords: ['soins', 'patient', 'médical', 'infirmier', 'hôpital', 'clinique', 'urgences', 'chirurgie', 'pharmacologie', 'hygiène', 'protocole', 'stérilisation', 'injection', 'perfusion', 'surveillance', 'réanimation', 'bloc opératoire', 'gériatrie', 'pédiatrie', 'sante', 'médecine', 'thérapie', 'diagnostic', 'traitement', 'pathologie', 'anatomie', 'physiologie'],
+    keywords: ['soins', 'patient', 'médical', 'infirmier', 'hôpital', 'clinique', 'urgences', 'chirurgie', 'pharmacologie', 'hygiène', 'protocole', 'stérilisation', 'injection', 'perfusion', 'surveillance', 'réanimation', 'bloc opératoire', 'gériatrie', 'pédiatrie', 'santé', 'médecine', 'thérapie', 'diagnostic', 'traitement', 'pathologie', 'anatomie', 'physiologie'],
+    coreKeywords: ['soins', 'patient', 'médical', 'santé', 'infirmier'],
     weight: 1.0,
-    incompatibleWith: ['tech', 'engineering']
+    strongIncompatible: ['tech', 'engineering-mechanical'],
+    weakIncompatible: ['marketing', 'sales']
   },
   'engineering': {
-    keywords: ['ingénieur', 'ingénierie', 'mécanique', 'électrique', 'civil', 'industriel', 'génie', 'conception', 'calcul', 'simulation', 'cad', 'autocad', 'solidworks', 'matlab', 'prototypage', 'essais', 'qualité', 'process', 'production', 'maintenance', 'technique'],
+    keywords: ['ingénieur', 'ingénierie', 'mécanique', 'électrique', 'civil', 'industriel', 'génie', 'conception', 'calcul', 'simulation', 'cad', 'autocad', 'solidworks', 'matlab', 'prototypage', 'essais', 'qualité', 'process', 'production', 'maintenance', 'technique', 'r&d', 'recherche'],
+    coreKeywords: ['ingénieur', 'ingénierie', 'technique', 'conception'],
     weight: 1.0,
-    incompatibleWith: ['healthcare', 'marketing']
+    strongIncompatible: ['healthcare-clinical'],
+    weakIncompatible: ['marketing', 'hr']
   },
   'finance': {
     keywords: ['comptabilité', 'bilan', 'budget', 'fiscalité', 'audit', 'tva', 'excel', 'sap', 'sage', 'consolidation', 'reporting', 'analyse financière', 'dcf', 'risk management', 'bloomberg', 'trading', 'investment', 'banque', 'assurance', 'crédit', 'finance'],
+    coreKeywords: ['comptabilité', 'finance', 'budget', 'fiscal'],
     weight: 1.0,
-    incompatibleWith: ['healthcare', 'tech']
+    strongIncompatible: ['healthcare-clinical'],
+    weakIncompatible: ['tech-pure']
   },
   'marketing': {
-    keywords: ['seo', 'sem', 'google ads', 'facebook ads', 'analytics', 'réseaux sociaux', 'content marketing', 'brand', 'storytelling', 'crm', 'email marketing', 'growth hacking', 'conversion', 'communication', 'publicité', 'campagne'],
+    keywords: ['seo', 'sem', 'google ads', 'facebook ads', 'analytics', 'réseaux sociaux', 'content marketing', 'brand', 'storytelling', 'crm', 'email marketing', 'growth hacking', 'conversion', 'communication', 'publicité', 'campagne', 'digital', 'marketing'],
+    coreKeywords: ['marketing', 'communication', 'publicité', 'digital'],
     weight: 1.0,
-    incompatibleWith: ['healthcare', 'engineering']
+    strongIncompatible: ['healthcare-clinical', 'engineering-mechanical'],
+    weakIncompatible: []
   },
   'design': {
-    keywords: ['photoshop', 'illustrator', 'figma', 'sketch', 'ux', 'ui', 'wireframe', 'prototype', 'design thinking', 'user research', 'typography', 'branding', 'identity', 'créatif', 'graphisme'],
+    keywords: ['photoshop', 'illustrator', 'figma', 'sketch', 'ux', 'ui', 'wireframe', 'prototype', 'design thinking', 'user research', 'typography', 'branding', 'identity', 'créatif', 'graphisme', 'design'],
+    coreKeywords: ['design', 'ux', 'ui', 'créatif'],
     weight: 1.0,
-    incompatibleWith: ['healthcare', 'finance']
+    strongIncompatible: ['healthcare-clinical', 'finance-traditional'],
+    weakIncompatible: []
   },
   'sales': {
     keywords: ['vente', 'prospection', 'négociation', 'crm', 'salesforce', 'lead generation', 'closing', 'account management', 'business development', 'partnership', 'commercial', 'client'],
+    coreKeywords: ['vente', 'commercial', 'négociation', 'client'],
     weight: 1.0,
-    incompatibleWith: ['healthcare']
+    strongIncompatible: ['healthcare-clinical'],
+    weakIncompatible: []
   },
   'hr': {
     keywords: ['recrutement', 'sourcing', 'entretien', 'rh', 'paie', 'formation', 'talent', 'sirh', 'droit du travail', 'relations sociales', 'assessment', 'ressources humaines'],
+    coreKeywords: ['recrutement', 'rh', 'ressources humaines'],
     weight: 1.0,
-    incompatibleWith: ['healthcare', 'tech']
+    strongIncompatible: ['healthcare-clinical'],
+    weakIncompatible: ['tech-pure']
   },
   'management': {
-    keywords: ['leadership', 'équipe', 'projet', 'scrum', 'agile', 'planning', 'budget', 'stratégie', 'management', 'coaching', 'pmp', 'gantt', 'gestion', 'direction'],
+    keywords: ['leadership', 'équipe', 'projet', 'scrum', 'agile', 'planning', 'budget', 'stratégie', 'management', 'coaching', 'pmp', 'gantt', 'gestion', 'direction', 'manager', 'chef'],
+    coreKeywords: ['management', 'leadership', 'équipe', 'gestion'],
     weight: 0.8,
-    incompatibleWith: []
+    strongIncompatible: [],
+    weakIncompatible: []
   }
 };
 
-// Mapping des catégories de postes vers les domaines de compétences
+// Mapping amélioré des catégories de postes
 const JOB_CATEGORY_DOMAINS = {
   'tech': ['tech', 'management'],
   'healthcare': ['healthcare'],
@@ -83,166 +101,471 @@ const JOB_CATEGORY_DOMAINS = {
   'sales': ['sales', 'management'],
   'hr': ['hr', 'management'],
   'management': ['management'],
-  'operations': ['management'],
+  'operations': ['management', 'engineering'],
   'consulting': ['management'],
   'legal': ['management'],
   'education': ['management']
 };
 
-// Analyse la cohérence du profil avec le poste - Version améliorée
+// Analyse intelligente des mots-clés avec pondération
+const analyzeKeywords = (cvText: string, jobPosition: JobPosition): {
+  score: number;
+  matched: string[];
+  missing: string[];
+} => {
+  const allKeywords = [
+    ...jobPosition.keywords.required,
+    ...jobPosition.keywords.preferred,
+    ...jobPosition.keywords.technical,
+    ...jobPosition.keywords.soft
+  ];
+
+  const matched: string[] = [];
+  const missing: string[] = [];
+
+  // Analyse avec variations et synonymes
+  allKeywords.forEach(keyword => {
+    const keywordLower = keyword.toLowerCase();
+    const variations = getKeywordVariations(keywordLower);
+    
+    const isFound = variations.some(variation => 
+      cvText.includes(variation) || 
+      cvText.includes(variation.replace(/\s+/g, '')) ||
+      fuzzyMatch(cvText, variation)
+    );
+    
+    if (isFound) {
+      matched.push(keyword);
+    } else {
+      missing.push(keyword);
+    }
+  });
+
+  // Scoring pondéré par importance
+  const requiredMatched = jobPosition.keywords.required.filter(k => 
+    matched.includes(k)
+  ).length;
+  const requiredTotal = jobPosition.keywords.required.length;
+  
+  const preferredMatched = jobPosition.keywords.preferred.filter(k => 
+    matched.includes(k)
+  ).length;
+  const preferredTotal = jobPosition.keywords.preferred.length;
+  
+  const technicalMatched = jobPosition.keywords.technical.filter(k => 
+    matched.includes(k)
+  ).length;
+  const technicalTotal = jobPosition.keywords.technical.length;
+  
+  const softMatched = jobPosition.keywords.soft.filter(k => 
+    matched.includes(k)
+  ).length;
+  const softTotal = jobPosition.keywords.soft.length;
+
+  // Calcul du score avec bonus/malus
+  let score = 0;
+  
+  if (requiredTotal > 0) {
+    const requiredRatio = requiredMatched / requiredTotal;
+    score += requiredRatio * 50; // 50% du score pour les compétences requises
+    
+    // Bonus si plus de 80% des compétences requises
+    if (requiredRatio >= 0.8) score += 10;
+    // Malus si moins de 30% des compétences requises
+    if (requiredRatio < 0.3) score -= 15;
+  }
+  
+  if (preferredTotal > 0) {
+    score += (preferredMatched / preferredTotal) * 25; // 25% du score
+  }
+  
+  if (technicalTotal > 0) {
+    score += (technicalMatched / technicalTotal) * 20; // 20% du score
+  }
+  
+  if (softTotal > 0) {
+    score += (softMatched / softTotal) * 5; // 5% du score
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    matched,
+    missing: missing.slice(0, 8)
+  };
+};
+
+// Génère des variations d'un mot-clé
+const getKeywordVariations = (keyword: string): string[] => {
+  const variations = [keyword];
+  
+  // Variations courantes
+  const synonyms: Record<string, string[]> = {
+    'javascript': ['js', 'javascript', 'node', 'nodejs'],
+    'react': ['reactjs', 'react.js'],
+    'python': ['py', 'python3'],
+    'développement': ['dev', 'developpement', 'développeur', 'developer'],
+    'gestion': ['management', 'pilotage'],
+    'équipe': ['team', 'groupe'],
+    'projet': ['project', 'projets'],
+    'base de données': ['bdd', 'database', 'db'],
+    'intelligence artificielle': ['ia', 'ai', 'machine learning'],
+    'expérience': ['exp', 'experience', 'années'],
+  };
+
+  if (synonyms[keyword]) {
+    variations.push(...synonyms[keyword]);
+  }
+
+  return variations;
+};
+
+// Matching flou pour détecter des mots similaires
+const fuzzyMatch = (text: string, keyword: string): boolean => {
+  if (keyword.length < 4) return false;
+  
+  const words = text.split(/\s+/);
+  return words.some(word => {
+    if (word.length < 4) return false;
+    
+    // Calcul de distance de Levenshtein simplifiée
+    const maxDistance = Math.floor(Math.max(word.length, keyword.length) * 0.2);
+    return levenshteinDistance(word.toLowerCase(), keyword.toLowerCase()) <= maxDistance;
+  });
+};
+
+// Distance de Levenshtein simplifiée
+const levenshteinDistance = (str1: string, str2: string): number => {
+  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+  
+  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+  
+  for (let j = 1; j <= str2.length; j++) {
+    for (let i = 1; i <= str1.length; i++) {
+      const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1,
+        matrix[j - 1][i] + 1,
+        matrix[j - 1][i - 1] + indicator
+      );
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+};
+
+// Analyse de cohérence du profil améliorée
 const analyzeProfileCoherence = (cvText: string, jobPosition: JobPosition): number => {
   const jobDomains = JOB_CATEGORY_DOMAINS[jobPosition.category as keyof typeof JOB_CATEGORY_DOMAINS] || [];
+  const primaryDomain = jobDomains[0];
   
+  if (!primaryDomain || !SKILL_DOMAINS[primaryDomain as keyof typeof SKILL_DOMAINS]) {
+    return 50; // Score neutre si pas de domaine défini
+  }
+  
+  const domainInfo = SKILL_DOMAINS[primaryDomain as keyof typeof SKILL_DOMAINS];
+  
+  // Analyse des compétences du domaine principal
   let relevantSkillsFound = 0;
-  let totalRelevantSkills = 0;
-  let incompatibleSkillsFound = 0;
-  let totalIncompatibleSkills = 0;
+  let coreSkillsFound = 0;
   
-  // Compter les compétences pertinentes trouvées
-  jobDomains.forEach(domain => {
-    const domainSkills = SKILL_DOMAINS[domain as keyof typeof SKILL_DOMAINS];
-    if (domainSkills) {
-      totalRelevantSkills += domainSkills.keywords.length;
-      domainSkills.keywords.forEach(keyword => {
-        if (cvText.includes(keyword.toLowerCase())) {
-          relevantSkillsFound++;
-        }
-      });
+  domainInfo.keywords.forEach(keyword => {
+    if (cvText.includes(keyword.toLowerCase())) {
+      relevantSkillsFound++;
     }
   });
   
-  // Compter les compétences incompatibles
-  Object.entries(SKILL_DOMAINS).forEach(([domain, skills]) => {
-    if (!jobDomains.includes(domain)) {
-      const mainJobDomain = jobDomains[0];
-      const mainDomainInfo = SKILL_DOMAINS[mainJobDomain as keyof typeof SKILL_DOMAINS];
+  domainInfo.coreKeywords.forEach(keyword => {
+    if (cvText.includes(keyword.toLowerCase())) {
+      coreSkillsFound++;
+    }
+  });
+  
+  // Score de base basé sur la présence de compétences pertinentes
+  let coherenceScore = (relevantSkillsFound / domainInfo.keywords.length) * 100;
+  
+  // Bonus important pour les compétences clés
+  const coreBonus = (coreSkillsFound / domainInfo.coreKeywords.length) * 30;
+  coherenceScore += coreBonus;
+  
+  // Analyse des incompatibilités fortes
+  let strongIncompatibilityPenalty = 0;
+  domainInfo.strongIncompatible.forEach(incompatibleDomain => {
+    const incompatibleInfo = SKILL_DOMAINS[incompatibleDomain as keyof typeof SKILL_DOMAINS];
+    if (incompatibleInfo) {
+      const incompatibleSkills = incompatibleInfo.keywords.filter(keyword => 
+        cvText.includes(keyword.toLowerCase())
+      ).length;
       
-      if (mainDomainInfo && mainDomainInfo.incompatibleWith.includes(domain)) {
-        totalIncompatibleSkills += skills.keywords.length;
-        skills.keywords.forEach(keyword => {
-          if (cvText.includes(keyword.toLowerCase())) {
-            incompatibleSkillsFound++;
-          }
-        });
+      if (incompatibleSkills > 3) {
+        strongIncompatibilityPenalty += incompatibleSkills * 5;
       }
     }
   });
   
-  // Calcul du score de cohérence plus strict
-  const relevanceRatio = totalRelevantSkills > 0 ? relevantSkillsFound / totalRelevantSkills : 0;
-  const incompatibilityPenalty = totalIncompatibleSkills > 0 ? (incompatibleSkillsFound / totalIncompatibleSkills) * 100 : 0;
+  // Analyse des incompatibilités faibles
+  let weakIncompatibilityPenalty = 0;
+  domainInfo.weakIncompatible.forEach(incompatibleDomain => {
+    const incompatibleInfo = SKILL_DOMAINS[incompatibleDomain as keyof typeof SKILL_DOMAINS];
+    if (incompatibleInfo) {
+      const incompatibleSkills = incompatibleInfo.keywords.filter(keyword => 
+        cvText.includes(keyword.toLowerCase())
+      ).length;
+      
+      if (incompatibleSkills > 5) {
+        weakIncompatibilityPenalty += incompatibleSkills * 2;
+      }
+    }
+  });
   
-  let coherenceScore = Math.max(0, (relevanceRatio * 100) - (incompatibilityPenalty * 2));
+  coherenceScore -= (strongIncompatibilityPenalty + weakIncompatibilityPenalty);
   
-  // Bonus si au moins 20% des compétences pertinentes sont trouvées
-  if (relevanceRatio >= 0.2) {
-    coherenceScore = Math.min(100, coherenceScore + 20);
-  }
-  
-  return Math.round(coherenceScore);
+  return Math.max(0, Math.min(100, coherenceScore));
 };
 
-// Analyse la pertinence sectorielle - Version plus stricte
+// Analyse de pertinence sectorielle améliorée
 const analyzeSectorRelevance = (cvText: string, jobPosition: JobPosition): number => {
   const sectorKeywords = {
-    'tech': ['développement', 'programmation', 'logiciel', 'application', 'système', 'informatique', 'digital', 'numérique', 'tech', 'startup', 'web'],
-    'healthcare': ['santé', 'médical', 'hôpital', 'clinique', 'cabinet', 'centre de soins', 'établissement de santé', 'chu', 'ehpad', 'urgences'],
-    'engineering': ['bureau d\'études', 'ingénierie', 'industrie', 'usine', 'production', 'manufacturier', 'technique', 'r&d', 'recherche'],
-    'finance': ['banque', 'assurance', 'finance', 'comptabilité', 'audit', 'cabinet comptable', 'société de gestion', 'bourse', 'investment'],
-    'marketing': ['agence', 'communication', 'publicité', 'marketing', 'digital', 'média', 'brand', 'créatif'],
-    'design': ['agence', 'studio', 'création', 'design', 'graphisme', 'web design', 'ux', 'créatif'],
-    'sales': ['commercial', 'vente', 'business', 'développement commercial', 'account', 'client', 'retail'],
-    'hr': ['ressources humaines', 'rh', 'recrutement', 'talent', 'formation', 'cabinet rh', 'consulting rh'],
-    'management': ['direction', 'management', 'chef', 'responsable', 'manager', 'directeur', 'cadre', 'leadership']
+    'tech': ['startup', 'scale-up', 'éditeur logiciel', 'ess', 'tech', 'digital', 'numérique', 'informatique', 'web', 'application', 'plateforme', 'api', 'saas'],
+    'healthcare': ['hôpital', 'clinique', 'cabinet médical', 'chu', 'ehpad', 'centre de soins', 'maison de santé', 'laboratoire médical', 'pharmacie'],
+    'engineering': ['bureau d\'études', 'industrie', 'usine', 'manufacture', 'r&d', 'laboratoire', 'centre technique', 'ingénierie'],
+    'finance': ['banque', 'assurance', 'audit', 'cabinet comptable', 'finance', 'investment', 'bourse', 'asset management'],
+    'marketing': ['agence', 'communication', 'publicité', 'média', 'marketing', 'événementiel', 'relations publiques'],
+    'design': ['studio', 'agence créative', 'design', 'architecture', 'création', 'graphisme'],
+    'sales': ['commercial', 'vente', 'distribution', 'retail', 'business development'],
+    'hr': ['rh', 'ressources humaines', 'recrutement', 'conseil rh', 'formation'],
+    'management': ['direction', 'management', 'conseil', 'stratégie', 'transformation']
+  };
+  
+  const experienceKeywords = {
+    'tech': ['développeur', 'ingénieur logiciel', 'devops', 'data scientist', 'product manager', 'cto', 'tech lead'],
+    'healthcare': ['infirmier', 'médecin', 'aide-soignant', 'pharmacien', 'kinésithérapeute', 'sage-femme'],
+    'engineering': ['ingénieur', 'technicien', 'chef de projet', 'responsable qualité', 'r&d'],
+    'finance': ['comptable', 'auditeur', 'analyste financier', 'contrôleur de gestion', 'trader'],
+    'marketing': ['chef de produit', 'community manager', 'traffic manager', 'brand manager'],
+    'design': ['designer', 'ux designer', 'directeur artistique', 'graphiste', 'architecte'],
+    'sales': ['commercial', 'account manager', 'business developer', 'key account'],
+    'hr': ['recruteur', 'rh', 'chargé de formation', 'responsable paie'],
+    'management': ['manager', 'directeur', 'chef d\'équipe', 'responsable', 'consultant']
   };
   
   const jobSectorKeywords = sectorKeywords[jobPosition.category as keyof typeof sectorKeywords] || [];
+  const jobExperienceKeywords = experienceKeywords[jobPosition.category as keyof typeof experienceKeywords] || [];
   
   let sectorMatches = 0;
+  let experienceMatches = 0;
   let contextualMatches = 0;
   
+  // Analyse des secteurs d'activité
   jobSectorKeywords.forEach(keyword => {
     if (cvText.includes(keyword.toLowerCase())) {
       sectorMatches++;
-      // Bonus si le mot-clé apparaît dans un contexte d'expérience
-      if (cvText.includes(`expérience ${keyword}`) || cvText.includes(`${keyword} depuis`) || cvText.includes(`ans ${keyword}`)) {
+      
+      // Bonus si le secteur est mentionné avec de l'expérience
+      if (cvText.includes(`expérience ${keyword}`) || 
+          cvText.includes(`${keyword} depuis`) || 
+          cvText.includes(`ans ${keyword}`)) {
         contextualMatches++;
       }
     }
   });
   
-  let sectorScore = (sectorMatches / Math.max(1, jobSectorKeywords.length)) * 100;
+  // Analyse des expériences métier
+  jobExperienceKeywords.forEach(keyword => {
+    if (cvText.includes(keyword.toLowerCase())) {
+      experienceMatches++;
+    }
+  });
   
-  // Bonus pour contexte d'expérience
-  if (contextualMatches > 0) {
-    sectorScore = Math.min(100, sectorScore + (contextualMatches * 10));
-  }
+  // Calcul du score
+  const sectorScore = (sectorMatches / Math.max(1, jobSectorKeywords.length)) * 40;
+  const experienceScore = (experienceMatches / Math.max(1, jobExperienceKeywords.length)) * 50;
+  const contextualBonus = contextualMatches * 5;
   
-  return Math.round(sectorScore);
+  const totalScore = sectorScore + experienceScore + contextualBonus;
+  
+  return Math.min(100, totalScore);
 };
 
-// Détecte les flags d'alerte - Version renforcée
+// Analyse d'expérience améliorée
+const analyzeExperience = (cvData: { text: string; experience?: string }, jobPosition: JobPosition): number => {
+  let experienceScore = 50; // Score de base
+  
+  if (cvData.experience) {
+    const expMatch = cvData.experience.match(/(\d+)/);
+    const yearsExp = expMatch ? parseInt(expMatch[0]) : 0;
+    
+    if (yearsExp >= jobPosition.experience.preferred) {
+      experienceScore = 90 + Math.min(10, (yearsExp - jobPosition.experience.preferred) * 2);
+    } else if (yearsExp >= jobPosition.experience.min) {
+      const ratio = (yearsExp - jobPosition.experience.min) / 
+        Math.max(1, jobPosition.experience.preferred - jobPosition.experience.min);
+      experienceScore = 70 + (ratio * 20);
+    } else if (yearsExp > 0) {
+      experienceScore = Math.max(30, (yearsExp / jobPosition.experience.min) * 60);
+    } else {
+      experienceScore = 25;
+    }
+  }
+  
+  // Bonus pour expérience pertinente mentionnée dans le texte
+  const experienceKeywords = [
+    `${jobPosition.experience.min} ans`,
+    `${jobPosition.experience.preferred} ans`,
+    'expérience',
+    'années',
+    'senior',
+    'junior'
+  ];
+  
+  const experienceBonus = experienceKeywords.filter(keyword => 
+    cvData.text.includes(keyword.toLowerCase())
+  ).length * 3;
+  
+  return Math.min(100, experienceScore + experienceBonus);
+};
+
+// Analyse d'éducation améliorée
+const analyzeEducation = (cvData: { education?: string }, jobPosition: JobPosition): number => {
+  if (!cvData.education) return 40; // Score de base sans information
+  
+  const educationLower = cvData.education.toLowerCase();
+  
+  // Vérification exacte des formations requises
+  const exactMatch = jobPosition.education.some(edu => 
+    educationLower.includes(edu.toLowerCase())
+  );
+  
+  if (exactMatch) {
+    return 95;
+  }
+  
+  // Analyse du niveau d'éducation
+  let levelScore = 0;
+  if (educationLower.includes('doctorat') || educationLower.includes('phd')) {
+    levelScore = 95;
+  } else if (educationLower.includes('master') || educationLower.includes('m2') || educationLower.includes('ingénieur')) {
+    levelScore = 85;
+  } else if (educationLower.includes('licence') || educationLower.includes('bachelor')) {
+    levelScore = 75;
+  } else if (educationLower.includes('bts') || educationLower.includes('dut')) {
+    levelScore = 65;
+  } else if (educationLower.includes('bac')) {
+    levelScore = 50;
+  } else {
+    levelScore = 40;
+  }
+  
+  // Analyse de la pertinence du domaine
+  const domainRelevance = analyzEducationDomainRelevance(educationLower, jobPosition.category);
+  
+  return Math.min(100, (levelScore * 0.6) + (domainRelevance * 0.4));
+};
+
+// Analyse de la pertinence du domaine d'éducation
+const analyzEducationDomainRelevance = (education: string, jobCategory: string): number => {
+  const domainKeywords = {
+    'tech': ['informatique', 'computer science', 'ingénieur logiciel', 'développement', 'numérique', 'tech'],
+    'healthcare': ['médecine', 'santé', 'infirmier', 'médical', 'pharmacie', 'kinésithérapie'],
+    'engineering': ['ingénieur', 'mécanique', 'électrique', 'industriel', 'génie', 'technique'],
+    'finance': ['finance', 'comptabilité', 'gestion', 'économie', 'banque', 'audit'],
+    'marketing': ['marketing', 'communication', 'commerce', 'gestion', 'business'],
+    'design': ['design', 'art', 'créatif', 'graphisme', 'architecture', 'esthétique'],
+    'sales': ['commerce', 'vente', 'business', 'gestion', 'marketing'],
+    'hr': ['ressources humaines', 'psychologie', 'gestion', 'droit social'],
+    'management': ['gestion', 'management', 'business', 'administration', 'commerce']
+  };
+  
+  const relevantKeywords = domainKeywords[jobCategory as keyof typeof domainKeywords] || [];
+  const matches = relevantKeywords.filter(keyword => education.includes(keyword)).length;
+  
+  if (matches === 0) {
+    // Vérification d'incompatibilité forte
+    const incompatibleDomains = {
+      'tech': ['médecine', 'santé', 'médical'],
+      'healthcare': ['informatique', 'ingénieur logiciel', 'développement'],
+      'engineering': ['médecine', 'santé', 'communication'],
+      'finance': ['médecine', 'santé', 'art'],
+      'marketing': ['médecine', 'ingénieur mécanique'],
+      'design': ['médecine', 'comptabilité'],
+      'sales': ['médecine', 'ingénieur'],
+      'hr': ['médecine', 'ingénieur mécanique'],
+      'management': []
+    };
+    
+    const incompatibleKeywords = incompatibleDomains[jobCategory as keyof typeof incompatibleDomains] || [];
+    const incompatibleMatches = incompatibleKeywords.filter(keyword => education.includes(keyword)).length;
+    
+    if (incompatibleMatches > 0) {
+      return 10; // Forte incompatibilité
+    }
+    
+    return 50; // Neutre
+  }
+  
+  return Math.min(100, (matches / relevantKeywords.length) * 100 + 20);
+};
+
+// Détection des flags d'alerte améliorée
 const detectWarningFlags = (
   cvText: string, 
   jobPosition: JobPosition, 
   coherenceScore: number, 
   sectorScore: number,
-  educationScore: number
+  educationScore: number,
+  keywordScore: number
 ): string[] => {
   const warnings: string[] = [];
   
-  // Incohérence majeure de profil
+  // Cohérence du profil
   if (coherenceScore < 20) {
     warnings.push("Profil complètement inadapté au domaine requis");
   } else if (coherenceScore < 40) {
-    warnings.push("Profil très éloigné du domaine requis");
+    warnings.push("Profil peu adapté au domaine requis");
   }
   
-  // Manque d'expérience sectorielle
-  if (sectorScore < 10) {
+  // Expérience sectorielle
+  if (sectorScore < 15) {
     warnings.push("Aucune expérience détectée dans le secteur");
-  } else if (sectorScore < 30) {
-    warnings.push("Expérience sectorielle insuffisante");
+  } else if (sectorScore < 35) {
+    warnings.push("Expérience sectorielle limitée");
   }
   
-  // Formation inadaptée
-  if (educationScore < 30) {
-    warnings.push("Formation non alignée avec les exigences du poste");
+  // Formation
+  if (educationScore < 25) {
+    warnings.push("Formation non alignée avec les exigences");
   }
   
-  // Détection de domaines hautement incompatibles
-  const jobCategory = jobPosition.category;
-  const jobDomainInfo = SKILL_DOMAINS[Object.keys(SKILL_DOMAINS).find(domain => 
-    JOB_CATEGORY_DOMAINS[jobCategory as keyof typeof JOB_CATEGORY_DOMAINS]?.includes(domain)
-  ) as keyof typeof SKILL_DOMAINS];
+  // Compétences techniques
+  if (keywordScore < 20) {
+    warnings.push("Compétences techniques insuffisantes");
+  }
   
-  if (jobDomainInfo && jobDomainInfo.incompatibleWith) {
-    jobDomainInfo.incompatibleWith.forEach(incompatibleDomain => {
-      const incompatibleSkills = SKILL_DOMAINS[incompatibleDomain as keyof typeof SKILL_DOMAINS];
-      if (incompatibleSkills) {
-        const skillsFound = incompatibleSkills.keywords.filter(keyword => 
-          cvText.includes(keyword.toLowerCase())
-        ).length;
-        
-        if (skillsFound > 2) {
-          warnings.push(`Profil ${incompatibleDomain} détecté, incompatible avec ${jobCategory}`);
-        }
-      }
-    });
+  // Compétences requises manquantes
+  const requiredMatched = jobPosition.keywords.required.filter(k => 
+    cvText.includes(k.toLowerCase())
+  ).length;
+  const requiredRatio = requiredMatched / Math.max(1, jobPosition.keywords.required.length);
+  
+  if (requiredRatio < 0.3) {
+    warnings.push("Majorité des compétences requises manquantes");
   }
   
   return warnings;
 };
 
-// Calcul du niveau de confiance - Version plus stricte
+// Calcul du niveau de confiance
 const calculateConfidenceLevel = (
   coherenceScore: number, 
   sectorScore: number, 
   warningFlags: string[],
-  educationScore: number
+  educationScore: number,
+  keywordScore: number
 ): 'high' | 'medium' | 'low' => {
-  if (warningFlags.length > 2 || coherenceScore < 30 || educationScore < 30) return 'low';
-  if (warningFlags.length > 0 || coherenceScore < 60 || sectorScore < 40) return 'medium';
+  const avgScore = (coherenceScore + sectorScore + educationScore + keywordScore) / 4;
+  
+  if (warningFlags.length >= 3 || avgScore < 30) return 'low';
+  if (warningFlags.length >= 1 || avgScore < 60) return 'medium';
   return 'high';
 };
 
@@ -257,148 +580,17 @@ export const calculateCVScore = (
 ): AnalysisResult => {
   const cvText = cvData.text.toLowerCase();
   
-  // Analyse des mots-clés avec pondération intelligente
-  const allKeywords = [
-    ...jobPosition.keywords.required,
-    ...jobPosition.keywords.preferred,
-    ...jobPosition.keywords.technical,
-    ...jobPosition.keywords.soft
-  ];
-
-  const matchedKeywords: string[] = [];
-  const missingKeywords: string[] = [];
-
-  allKeywords.forEach(keyword => {
-    if (cvText.includes(keyword.toLowerCase())) {
-      matchedKeywords.push(keyword);
-    } else {
-      missingKeywords.push(keyword);
-    }
-  });
-
-  // Score des mots-clés avec pondération plus stricte
-  const requiredMatched = jobPosition.keywords.required.filter(k => 
-    cvText.includes(k.toLowerCase())
-  ).length;
-  const requiredTotal = jobPosition.keywords.required.length;
+  // Analyse des mots-clés avec nouvel algorithme
+  const keywordAnalysis = analyzeKeywords(cvText, jobPosition);
   
-  const preferredMatched = jobPosition.keywords.preferred.filter(k => 
-    cvText.includes(k.toLowerCase())
-  ).length;
-  const preferredTotal = jobPosition.keywords.preferred.length;
+  // Analyse de l'expérience
+  const experienceScore = analyzeExperience(cvData, jobPosition);
   
-  const technicalMatched = jobPosition.keywords.technical.filter(k => 
-    cvText.includes(k.toLowerCase())
-  ).length;
-  const technicalTotal = jobPosition.keywords.technical.length;
+  // Analyse de l'éducation
+  const educationScore = analyzeEducation(cvData, jobPosition);
   
-  const softMatched = jobPosition.keywords.soft.filter(k => 
-    cvText.includes(k.toLowerCase())
-  ).length;
-  const softTotal = jobPosition.keywords.soft.length;
-
-  // Calcul plus strict - pas de compensation entre catégories
-  let keywordScore = 0;
-  if (requiredTotal > 0) {
-    const requiredScore = (requiredMatched / requiredTotal) * 60; // 60% du score max
-    keywordScore += requiredScore;
-  }
-  if (preferredTotal > 0) {
-    const preferredScore = (preferredMatched / preferredTotal) * 20; // 20% du score max
-    keywordScore += preferredScore;
-  }
-  if (technicalTotal > 0) {
-    const technicalScore = (technicalMatched / technicalTotal) * 15; // 15% du score max
-    keywordScore += technicalScore;
-  }
-  if (softTotal > 0) {
-    const softScore = (softMatched / softTotal) * 5; // 5% du score max
-    keywordScore += softScore;
-  }
-
-  // Malus si moins de 50% des compétences requises
-  if (requiredTotal > 0 && (requiredMatched / requiredTotal) < 0.5) {
-    keywordScore *= 0.6; // Malus de 40%
-  }
-
-  // Score d'expérience plus réaliste
-  let experienceScore = 0;
-  if (cvData.experience) {
-    const expMatch = cvData.experience.match(/(\d+)/);
-    const yearsExp = expMatch ? parseInt(expMatch[0]) : 0;
-    
-    if (yearsExp >= jobPosition.experience.preferred) {
-      experienceScore = 90;
-    } else if (yearsExp >= jobPosition.experience.min) {
-      const ratio = (yearsExp - jobPosition.experience.min) / 
-        Math.max(1, jobPosition.experience.preferred - jobPosition.experience.min);
-      experienceScore = 60 + (ratio * 30);
-    } else if (yearsExp > 0) {
-      experienceScore = Math.min(50, (yearsExp / jobPosition.experience.min) * 50);
-    } else {
-      experienceScore = 10; // Score très bas sans expérience détectée
-    }
-  } else {
-    experienceScore = 10;
-  }
-
-  // Score d'éducation plus strict avec vérification de pertinence
-  let educationScore = 0;
-  if (cvData.education) {
-    const educationLower = cvData.education.toLowerCase();
-    
-    // Vérification exacte des formations requises
-    const exactMatch = jobPosition.education.some(edu => 
-      educationLower.includes(edu.toLowerCase())
-    );
-    
-    if (exactMatch) {
-      educationScore = 90;
-    } else {
-      // Vérification de la cohérence du domaine
-      const jobCategory = jobPosition.category;
-      let domainMatch = false;
-      
-      switch (jobCategory) {
-        case 'healthcare':
-          domainMatch = educationLower.includes('santé') || educationLower.includes('médical') || 
-                       educationLower.includes('infirmier') || educationLower.includes('médecine');
-          break;
-        case 'tech':
-          domainMatch = educationLower.includes('informatique') || educationLower.includes('ingénieur') ||
-                       educationLower.includes('tech') || educationLower.includes('développement');
-          break;
-        case 'engineering':
-          domainMatch = educationLower.includes('ingénieur') || educationLower.includes('technique') ||
-                       educationLower.includes('mécanique') || educationLower.includes('industriel');
-          break;
-        case 'finance':
-          domainMatch = educationLower.includes('finance') || educationLower.includes('comptabilité') ||
-                       educationLower.includes('gestion') || educationLower.includes('économie');
-          break;
-        default:
-          // Vérification générale du niveau
-          domainMatch = educationLower.includes('master') || educationLower.includes('licence');
-      }
-      
-      if (domainMatch) {
-        educationScore = 60;
-      } else {
-        // Vérification opposée - formations incompatibles
-        const isIncompatible = checkEducationIncompatibility(educationLower, jobCategory);
-        if (isIncompatible) {
-          educationScore = 5; // Score très bas pour formation incompatible
-        } else {
-          educationScore = 25; // Score neutre
-        }
-      }
-    }
-  } else {
-    educationScore = 15;
-  }
-
-  // Score de certifications - plus strict
-  let certificationScore = 50; // Score neutre par défaut
+  // Score de certifications
+  let certificationScore = 60; // Score neutre par défaut
   if (jobPosition.certifications && jobPosition.certifications.length > 0) {
     if (cvData.certifications && cvData.certifications.length > 0) {
       const matchingCerts = jobPosition.certifications.filter(cert =>
@@ -407,82 +599,109 @@ export const calculateCVScore = (
         )
       );
       certificationScore = (matchingCerts.length / jobPosition.certifications.length) * 100;
+      if (matchingCerts.length > 0) certificationScore += 20; // Bonus pour avoir des certifications
     } else {
-      certificationScore = 20; // Malus si pas de certifications mais requises
+      certificationScore = 40; // Malus si certifications requises mais absentes
     }
   }
-
+  
   // Analyses avancées
   const coherenceScore = analyzeProfileCoherence(cvText, jobPosition);
   const sectorScore = analyzeSectorRelevance(cvText, jobPosition);
-  const warningFlags = detectWarningFlags(cvText, jobPosition, coherenceScore, sectorScore, educationScore);
-  const confidenceLevel = calculateConfidenceLevel(coherenceScore, sectorScore, warningFlags, educationScore);
-
-  // Calcul du score final avec malus drastiques pour incohérence
+  
+  // Détection des alertes
+  const warningFlags = detectWarningFlags(
+    cvText, 
+    jobPosition, 
+    coherenceScore, 
+    sectorScore, 
+    educationScore,
+    keywordAnalysis.score
+  );
+  
+  // Niveau de confiance
+  const confidenceLevel = calculateConfidenceLevel(
+    coherenceScore, 
+    sectorScore, 
+    warningFlags, 
+    educationScore,
+    keywordAnalysis.score
+  );
+  
+  // Calcul du score final avec pondération intelligente
   const baseScore = (
-    keywordScore * jobPosition.scoreWeights.keywords +
+    keywordAnalysis.score * jobPosition.scoreWeights.keywords +
     experienceScore * jobPosition.scoreWeights.experience +
     educationScore * jobPosition.scoreWeights.education +
     certificationScore * jobPosition.scoreWeights.certifications
   );
-
-  // Application de malus sévères pour incohérence
+  
+  // Ajustements basés sur la cohérence et la pertinence sectorielle
   let finalScore = baseScore;
   
-  // Malus pour cohérence faible
-  if (coherenceScore < 50) {
-    const coherencePenalty = (50 - coherenceScore) * 1.5; // Malus plus sévère
-    finalScore -= coherencePenalty;
+  // Bonus pour cohérence élevée
+  if (coherenceScore > 80) {
+    finalScore += 5;
+  } else if (coherenceScore < 30) {
+    finalScore -= 15; // Malus pour incohérence
   }
   
-  // Malus pour pertinence sectorielle faible
-  if (sectorScore < 40) {
-    const sectorPenalty = (40 - sectorScore) * 1.2;
-    finalScore -= sectorPenalty;
+  // Bonus pour pertinence sectorielle
+  if (sectorScore > 70) {
+    finalScore += 5;
+  } else if (sectorScore < 20) {
+    finalScore -= 10;
   }
   
-  // Malus pour chaque alerte
-  finalScore -= warningFlags.length * 15;
-  
-  // Malus drastique si formation complètement inadaptée
-  if (educationScore < 20) {
-    finalScore *= 0.5; // Divise le score par 2
+  // Malus pour alertes multiples
+  if (warningFlags.length >= 3) {
+    finalScore -= 20;
+  } else if (warningFlags.length >= 1) {
+    finalScore -= 5;
   }
   
   finalScore = Math.max(0, Math.min(100, finalScore));
-
-  // Génération des recommandations intelligentes
+  
+  // Génération des recommandations
   const strengths: string[] = [];
   const improvements: string[] = [];
-
-  if (coherenceScore > 70) {
-    strengths.push("Profil parfaitement aligné avec le domaine");
-  } else if (coherenceScore < 30) {
-    improvements.push("Reorienter complètement le CV vers les compétences du domaine ciblé");
-  }
-
-  if (keywordScore > 60) {
+  
+  if (keywordAnalysis.score > 70) {
     strengths.push("Bonnes compétences techniques identifiées");
-  } else if (keywordScore < 30) {
-    improvements.push("Développer urgemment les compétences techniques spécifiques");
   }
-
-  if (educationScore > 70) {
-    strengths.push("Formation très adaptée au poste");
-  } else if (educationScore < 30) {
-    improvements.push("Formation inadaptée - envisager une reconversion");
+  if (experienceScore > 80) {
+    strengths.push("Expérience très adaptée au poste");
   }
-
-  if (sectorScore > 60) {
-    strengths.push("Bonne connaissance du secteur d'activité");
-  } else if (sectorScore < 20) {
-    improvements.push("Acquérir une expérience significative dans le secteur");
+  if (educationScore > 80) {
+    strengths.push("Formation excellente pour le poste");
   }
-
+  if (coherenceScore > 70) {
+    strengths.push("Profil cohérent avec le domaine");
+  }
+  if (sectorScore > 70) {
+    strengths.push("Bonne connaissance du secteur");
+  }
+  
+  if (keywordAnalysis.score < 40) {
+    improvements.push("Développer les compétences techniques spécifiques");
+  }
+  if (experienceScore < 50) {
+    improvements.push("Acquérir plus d'expérience dans le domaine");
+  }
+  if (educationScore < 50) {
+    improvements.push("Formation complémentaire recommandée");
+  }
+  if (coherenceScore < 40) {
+    improvements.push("Repositionner le CV vers le domaine ciblé");
+  }
+  if (sectorScore < 30) {
+    improvements.push("Acquérir une expérience sectorielle");
+  }
+  
   return {
     score: Math.round(finalScore),
-    matchedKeywords,
-    missingKeywords: missingKeywords.slice(0, 8),
+    matchedKeywords: keywordAnalysis.matched,
+    missingKeywords: keywordAnalysis.missing,
     strengths,
     improvements,
     experienceMatch: Math.round(experienceScore),
@@ -490,7 +709,7 @@ export const calculateCVScore = (
     profileCoherence: Math.round(coherenceScore),
     sectorRelevance: Math.round(sectorScore),
     breakdown: {
-      keywordScore: Math.round(keywordScore),
+      keywordScore: Math.round(keywordAnalysis.score),
       experienceScore: Math.round(experienceScore),
       educationScore: Math.round(educationScore),
       certificationScore: Math.round(certificationScore),
@@ -502,20 +721,6 @@ export const calculateCVScore = (
   };
 };
 
-// Fonction pour vérifier l'incompatibilité éducative
-const checkEducationIncompatibility = (education: string, jobCategory: string): boolean => {
-  const incompatibilities = {
-    'healthcare': ['informatique', 'ingénieur', 'tech', 'développement', 'programmation'],
-    'tech': ['médical', 'santé', 'infirmier', 'médecine'],
-    'engineering': ['médical', 'santé', 'infirmier', 'marketing'],
-    'finance': ['médical', 'santé', 'infirmier', 'tech'],
-    'marketing': ['médical', 'santé', 'infirmier', 'ingénieur']
-  };
-  
-  const incompatibleTerms = incompatibilities[jobCategory as keyof typeof incompatibilities] || [];
-  return incompatibleTerms.some(term => education.includes(term));
-};
-
 export const simulateDetailedAnalysis = (
   fileName: string,
   jobPositionId: string
@@ -525,7 +730,7 @@ export const simulateDetailedAnalysis = (
     throw new Error("Position not found");
   }
 
-  // Simulation plus réaliste avec cohérence stricte
+  // Génération de CV simulé plus réaliste
   const mockCvData = generateRealisticMockCVData(jobPosition, fileName);
   const result = calculateCVScore(jobPosition, mockCvData);
   
@@ -535,60 +740,131 @@ export const simulateDetailedAnalysis = (
   };
 };
 
-// Génération de CV simulé plus réaliste avec logique stricte
+// Génération de CV simulé améliorée
 const generateRealisticMockCVData = (jobPosition: JobPosition, fileName: string) => {
   const category = jobPosition.category;
-  
-  // Détermine le type de profil basé sur le nom du fichier
   const profileType = determineProfileType(fileName);
-  const isRelevant = profileType === category || 
-                    (profileType === 'management' && category !== 'healthcare') ||
-                    (profileType === 'generic');
   
-  // Génération du texte CV selon le type de profil
+  // Détermine la compatibilité du profil avec le poste
+  const compatibility = calculateProfileCompatibility(profileType, category);
+  
   let cvText = '';
   let education = '';
-  let experience = `${Math.floor(Math.random() * 8) + 1} ans`;
+  let experience = `${Math.floor(Math.random() * 8) + 2} ans`;
   
-  if (profileType && profileType !== 'generic') {
-    const profileDomain = SKILL_DOMAINS[profileType as keyof typeof SKILL_DOMAINS];
-    if (profileDomain) {
-      // Ajoute massivement les compétences du profil détecté
-      const skillsToAdd = profileDomain.keywords.slice(0, Math.floor(profileDomain.keywords.length * 0.8));
-      cvText = skillsToAdd.join(' ').toLowerCase();
-      
-      // Education cohérente avec le profil
-      education = getEducationForProfile(profileType);
-    }
-  }
-  
-  // Si le profil est pertinent, ajoute quelques compétences du job
-  if (isRelevant) {
+  // Génération du texte CV basé sur la compatibilité
+  if (compatibility.level === 'high') {
+    // Profil très compatible - ajoute beaucoup de compétences pertinentes
     const relevantSkills = [
-      ...jobPosition.keywords.required.slice(0, Math.floor(jobPosition.keywords.required.length * 0.6)),
-      ...jobPosition.keywords.preferred.slice(0, Math.floor(jobPosition.keywords.preferred.length * 0.4))
+      ...jobPosition.keywords.required.slice(0, Math.floor(jobPosition.keywords.required.length * 0.8)),
+      ...jobPosition.keywords.preferred.slice(0, Math.floor(jobPosition.keywords.preferred.length * 0.6)),
+      ...jobPosition.keywords.technical.slice(0, Math.floor(jobPosition.keywords.technical.length * 0.7))
     ];
-    cvText += ' ' + relevantSkills.join(' ').toLowerCase();
+    cvText = relevantSkills.join(' ').toLowerCase();
+    education = jobPosition.education[0] || getEducationForProfile(profileType || 'generic');
     
-    if (!education) {
-      education = jobPosition.education[0] || 'Master';
+    // Ajoute des compétences du domaine du profil
+    if (profileType && SKILL_DOMAINS[profileType as keyof typeof SKILL_DOMAINS]) {
+      const profileSkills = SKILL_DOMAINS[profileType as keyof typeof SKILL_DOMAINS].keywords.slice(0, 15);
+      cvText += ' ' + profileSkills.join(' ').toLowerCase();
     }
+    
+  } else if (compatibility.level === 'medium') {
+    // Profil moyennement compatible - quelques compétences communes
+    const relevantSkills = [
+      ...jobPosition.keywords.required.slice(0, Math.floor(jobPosition.keywords.required.length * 0.4)),
+      ...jobPosition.keywords.preferred.slice(0, Math.floor(jobPosition.keywords.preferred.length * 0.3))
+    ];
+    cvText = relevantSkills.join(' ').toLowerCase();
+    education = getEducationForProfile(profileType || 'generic');
+    
+    // Ajoute quelques compétences du profil original
+    if (profileType && SKILL_DOMAINS[profileType as keyof typeof SKILL_DOMAINS]) {
+      const profileSkills = SKILL_DOMAINS[profileType as keyof typeof SKILL_DOMAINS].keywords.slice(0, 8);
+      cvText += ' ' + profileSkills.join(' ').toLowerCase();
+    }
+    
   } else {
-    // Profil non pertinent - très peu de compétences communes
-    const someSkills = jobPosition.keywords.required.slice(0, Math.floor(jobPosition.keywords.required.length * 0.1));
-    cvText += ' ' + someSkills.join(' ').toLowerCase();
-    
-    if (!education) {
-      education = getEducationForProfile(profileType || 'generic');
+    // Profil incompatible - principalement des compétences du profil original
+    if (profileType && SKILL_DOMAINS[profileType as keyof typeof SKILL_DOMAINS]) {
+      const profileSkills = SKILL_DOMAINS[profileType as keyof typeof SKILL_DOMAINS].keywords.slice(0, 20);
+      cvText = profileSkills.join(' ').toLowerCase();
     }
+    
+    // Très peu de compétences communes
+    const fewRelevantSkills = jobPosition.keywords.required.slice(0, Math.floor(jobPosition.keywords.required.length * 0.1));
+    cvText += ' ' + fewRelevantSkills.join(' ').toLowerCase();
+    education = getEducationForProfile(profileType || 'generic');
   }
   
   return {
     text: cvText,
     experience,
     education,
-    certifications: isRelevant && jobPosition.certifications ? [jobPosition.certifications[0]] : undefined
+    certifications: compatibility.level === 'high' && jobPosition.certifications ? 
+      [jobPosition.certifications[0]] : undefined
   };
+};
+
+// Calcule la compatibilité entre un profil et une catégorie de poste
+const calculateProfileCompatibility = (profileType: string | null, jobCategory: string): {
+  level: 'high' | 'medium' | 'low';
+  reason: string;
+} => {
+  if (!profileType) {
+    return { level: 'medium', reason: 'Generic profile' };
+  }
+  
+  // Compatibilités directes
+  const directMatches: Record<string, string[]> = {
+    'tech': ['tech'],
+    'healthcare': ['healthcare'],
+    'engineering': ['engineering'],
+    'finance': ['finance'],
+    'marketing': ['marketing', 'design'],
+    'design': ['design', 'marketing'],
+    'sales': ['sales'],
+    'hr': ['hr'],
+    'management': ['management']
+  };
+  
+  // Compatibilités partielles
+  const partialMatches: Record<string, string[]> = {
+    'tech': ['management'],
+    'engineering': ['management', 'tech'],
+    'finance': ['management'],
+    'marketing': ['sales', 'management'],
+    'design': ['tech'],
+    'sales': ['marketing', 'management'],
+    'hr': ['management'],
+    'management': ['tech', 'engineering', 'finance', 'marketing', 'sales', 'hr']
+  };
+  
+  // Incompatibilités fortes
+  const strongIncompatibilities: Record<string, string[]> = {
+    'tech': ['healthcare'],
+    'healthcare': ['tech', 'engineering', 'finance', 'marketing', 'design', 'sales', 'hr'],
+    'engineering': ['healthcare', 'marketing', 'hr'],
+    'finance': ['healthcare', 'design'],
+    'marketing': ['healthcare', 'engineering'],
+    'design': ['healthcare', 'finance'],
+    'sales': ['healthcare'],
+    'hr': ['healthcare', 'engineering']
+  };
+  
+  const directMatch = directMatches[jobCategory]?.includes(profileType);
+  const partialMatch = partialMatches[jobCategory]?.includes(profileType);
+  const strongIncompatibility = strongIncompatibilities[jobCategory]?.includes(profileType);
+  
+  if (directMatch) {
+    return { level: 'high', reason: 'Direct match' };
+  } else if (partialMatch) {
+    return { level: 'medium', reason: 'Partial compatibility' };
+  } else if (strongIncompatibility) {
+    return { level: 'low', reason: 'Strong incompatibility' };
+  } else {
+    return { level: 'medium', reason: 'Neutral compatibility' };
+  }
 };
 
 // Détermine le type de profil basé sur le nom du fichier
@@ -598,19 +874,19 @@ const determineProfileType = (fileName: string): string | null => {
   if (nameLower.includes('ingenieur') || nameLower.includes('engineer') || nameLower.includes('technique')) {
     return 'engineering';
   }
-  if (nameLower.includes('dev') || nameLower.includes('tech') || nameLower.includes('informatique')) {
+  if (nameLower.includes('dev') || nameLower.includes('tech') || nameLower.includes('informatique') || nameLower.includes('programmeur')) {
     return 'tech';
   }
-  if (nameLower.includes('infirmier') || nameLower.includes('medic') || nameLower.includes('sante')) {
+  if (nameLower.includes('infirmier') || nameLower.includes('medic') || nameLower.includes('sante') || nameLower.includes('soignant')) {
     return 'healthcare';
   }
-  if (nameLower.includes('finance') || nameLower.includes('compta') || nameLower.includes('audit')) {
+  if (nameLower.includes('finance') || nameLower.includes('compta') || nameLower.includes('audit') || nameLower.includes('comptable')) {
     return 'finance';
   }
   if (nameLower.includes('market') || nameLower.includes('comm') || nameLower.includes('pub')) {
     return 'marketing';
   }
-  if (nameLower.includes('design') || nameLower.includes('ux') || nameLower.includes('graph')) {
+  if (nameLower.includes('design') || nameLower.includes('ux') || nameLower.includes('graph') || nameLower.includes('creatif')) {
     return 'design';
   }
   if (nameLower.includes('commercial') || nameLower.includes('vente') || nameLower.includes('sales')) {
@@ -623,7 +899,7 @@ const determineProfileType = (fileName: string): string | null => {
     return 'management';
   }
   
-  return 'generic';
+  return null;
 };
 
 // Retourne une éducation cohérente avec le type de profil
@@ -638,8 +914,8 @@ const getEducationForProfile = (profileType: string): string => {
     'sales': 'École de Commerce',
     'hr': 'Master RH',
     'management': 'École de Management',
-    'generic': 'Licence'
+    'generic': 'Master Gestion'
   };
   
-  return educationMap[profileType as keyof typeof educationMap] || 'Licence';
+  return educationMap[profileType as keyof typeof educationMap] || 'Master';
 };
