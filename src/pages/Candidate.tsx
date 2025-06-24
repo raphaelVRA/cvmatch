@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Upload, FileText, Target, BarChart3, CheckCircle, XCircle, ArrowLeft, TrendingUp, Award } from "lucide-react";
+import { Upload, FileText, Target, BarChart3, CheckCircle, XCircle, ArrowLeft, TrendingUp, Award, AlertTriangle, Shield, Building } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { JobPositionSelector } from "@/components/JobPositionSelector";
@@ -71,6 +71,24 @@ const Candidate = () => {
 
   const selectedJob = getJobPositionById(selectedPosition);
 
+  const getConfidenceColor = (level: string) => {
+    switch (level) {
+      case 'high': return "text-green-600 bg-green-100";
+      case 'medium': return "text-orange-600 bg-orange-100";
+      case 'low': return "text-red-600 bg-red-100";
+      default: return "text-gray-600 bg-gray-100";
+    }
+  };
+
+  const getConfidenceText = (level: string) => {
+    switch (level) {
+      case 'high': return "Analyse très fiable";
+      case 'medium': return "Analyse modérément fiable";
+      case 'low': return "Analyse peu fiable - Profil inadapté";
+      default: return "Non défini";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Header */}
@@ -115,7 +133,7 @@ const Candidate = () => {
             <div className="text-center text-gray-600">
               {step === 1 && "Upload de votre CV"}
               {step === 2 && "Sélection du poste"}
-              {step === 3 && "Résultats de l'analyse"}
+              {step === 3 && "Analyse avancée"}
             </div>
           </div>
 
@@ -125,7 +143,7 @@ const Candidate = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Uploadez votre CV</CardTitle>
                 <CardDescription className="text-lg">
-                  Analysez gratuitement votre CV avec notre IA avancée
+                  Analyse IA avancée avec détection d'incohérences
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -176,7 +194,7 @@ const Candidate = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Choisissez le poste visé</CardTitle>
                 <CardDescription className="text-lg">
-                  Plus de 25 métiers disponibles pour une analyse précise
+                  Analyse précise parmi 25+ métiers spécialisés
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -209,7 +227,7 @@ const Candidate = () => {
                     {isAnalyzing ? (
                       <>
                         <BarChart3 className="w-5 h-5 mr-2 animate-spin" />
-                        Analyse en cours...
+                        Analyse IA en cours...
                       </>
                     ) : (
                       "Analyser mon CV"
@@ -223,18 +241,46 @@ const Candidate = () => {
           {/* Step 3: Results */}
           {step === 3 && analysisResult && selectedJob && (
             <div className="space-y-6">
-              {/* Score principal */}
+              {/* Score principal avec niveau de confiance */}
               <Card className="border-0 shadow-xl bg-gradient-to-r from-blue-600 to-green-600 text-white">
                 <CardHeader className="text-center">
-                  <CardTitle className="text-3xl mb-2">Score de compatibilité</CardTitle>
+                  <div className="flex items-center justify-center space-x-3 mb-2">
+                    <CardTitle className="text-3xl">Score de compatibilité</CardTitle>
+                    <Badge className={`${getConfidenceColor(analysisResult.confidenceLevel)} text-sm`}>
+                      <Shield className="w-3 h-3 mr-1" />
+                      {getConfidenceText(analysisResult.confidenceLevel)}
+                    </Badge>
+                  </div>
                   <div className="text-6xl font-bold mb-4">{analysisResult.score}%</div>
                   <Progress value={analysisResult.score} className="w-full bg-white/20" />
                   <p className="text-blue-100 mt-2">Pour le poste : {selectedJob.title}</p>
                 </CardHeader>
               </Card>
 
-              {/* Détails du score */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Alertes d'incohérence */}
+              {analysisResult.warningFlags && analysisResult.warningFlags.length > 0 && (
+                <Card className="border-red-200 bg-red-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start">
+                      <AlertTriangle className="w-6 h-6 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-red-800 mb-2">Alertes détectées par l'IA</h3>
+                        <ul className="text-red-700 space-y-1">
+                          {analysisResult.warningFlags.map((warning: string, index: number) => (
+                            <li key={index} className="flex items-start">
+                              <span className="mr-2">•</span>
+                              <span>{warning}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Détails du score avec nouvelles métriques */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Card className="border-0 shadow-lg">
                   <CardContent className="p-4 text-center">
                     <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
@@ -254,6 +300,20 @@ const Candidate = () => {
                     <Target className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-purple-600">{analysisResult.breakdown.educationScore}%</div>
                     <div className="text-sm text-gray-600">Formation</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-4 text-center">
+                    <Shield className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-indigo-600">{analysisResult.breakdown.coherenceScore}%</div>
+                    <div className="text-sm text-gray-600">Cohérence profil</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-4 text-center">
+                    <Building className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-teal-600">{analysisResult.breakdown.sectorScore}%</div>
+                    <div className="text-sm text-gray-600">Pertinence secteur</div>
                   </CardContent>
                 </Card>
                 <Card className="border-0 shadow-lg">
@@ -324,7 +384,7 @@ const Candidate = () => {
 
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
-                    <CardTitle className="text-orange-600">Recommandations</CardTitle>
+                    <CardTitle className="text-orange-600">Recommandations IA</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">

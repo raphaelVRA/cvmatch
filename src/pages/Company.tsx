@@ -4,12 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Upload, Target, ArrowLeft, Users, BarChart3, Download, Eye, TrendingUp } from "lucide-react";
+import { Upload, Target, ArrowLeft, Users, BarChart3, Download, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { JobPositionSelector } from "@/components/JobPositionSelector";
+import { CVAnalysisResult } from "@/components/CVAnalysisResult";
 import { simulateDetailedAnalysis } from "@/utils/cvAnalysis";
 import { getJobPositionById } from "@/data/jobPositions";
 
@@ -81,7 +81,7 @@ const Company = () => {
         rank: index + 1,
         experience: `${Math.floor(Math.random() * 8) + 2} ans`,
         education: index % 2 === 0 ? "Master" : "Licence",
-        summary: `Candidat avec un profil ${result.score >= 80 ? 'excellent' : result.score >= 65 ? 'très bon' : 'prometteur'} pour ce poste.`
+        summary: `Candidat avec un profil ${result.score >= 80 ? 'excellent' : result.score >= 65 ? 'très bon' : result.score >= 50 ? 'correct' : 'inadapté'} pour ce poste.`
       }));
       
       setAnalysisResults(resultsWithRank);
@@ -102,13 +102,6 @@ const Company = () => {
     setJobData({ positionId: "", customTitle: "", description: "", requirements: "", keywords: "" });
     setUploadedFiles([]);
     setAnalysisResults([]);
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 85) return "text-green-600 bg-green-50";
-    if (score >= 70) return "text-blue-600 bg-blue-50";
-    if (score >= 60) return "text-orange-600 bg-orange-50";
-    return "text-red-600 bg-red-50";
   };
 
   const selectedJob = getJobPositionById(jobData.positionId);
@@ -158,7 +151,7 @@ const Company = () => {
             <div className="text-center text-gray-600">
               {step === 1 && "Description du poste"}
               {step === 2 && "Upload des CV"}
-              {step === 3 && "Classement des candidats"}
+              {step === 3 && "Analyse IA avancée"}
             </div>
           </div>
 
@@ -300,30 +293,6 @@ const Company = () => {
                   </div>
                 )}
 
-                <Separator />
-                
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-blue-800 mb-2">Récapitulatif du poste</h3>
-                  <p className="text-blue-700"><strong>Titre :</strong> {jobTitle}</p>
-                  {selectedJob && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-blue-700"><strong>Compétences requises :</strong></p>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedJob.keywords.required.slice(0, 5).map((keyword) => (
-                          <Badge key={keyword} variant="secondary" className="text-xs">
-                            {keyword}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {jobData.keywords && (
-                    <p className="text-blue-700 mt-1">
-                      <strong>Mots-clés supplémentaires :</strong> {jobData.keywords}
-                    </p>
-                  )}
-                </div>
-
                 <div className="flex space-x-4">
                   <Button 
                     variant="outline" 
@@ -340,7 +309,7 @@ const Company = () => {
                     {isAnalyzing ? (
                       <>
                         <BarChart3 className="w-5 h-5 mr-2 animate-spin" />
-                        Analyse en cours...
+                        Analyse IA en cours...
                       </>
                     ) : (
                       `Analyser ${uploadedFiles.length} CV(s)`
@@ -351,13 +320,13 @@ const Company = () => {
             </Card>
           )}
 
-          {/* Step 3: Results */}
+          {/* Step 3: Results avec nouveau composant */}
           {step === 3 && analysisResults.length > 0 && (
             <div className="space-y-6">
               {/* Header avec actions */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Classement des candidats</h2>
+                  <h2 className="text-3xl font-bold text-gray-900">Classement IA des candidats</h2>
                   <p className="text-gray-600">Pour le poste : <strong>{jobTitle}</strong></p>
                 </div>
                 <div className="flex space-x-3">
@@ -399,86 +368,22 @@ const Company = () => {
                 </Card>
                 <Card className="border-0 shadow-lg">
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-purple-600 mb-2">
-                      {analysisResults.filter(r => r.score >= 70).length}
+                    <div className="text-3xl font-bold text-red-600 mb-2">
+                      {analysisResults.filter(r => r.warningFlags && r.warningFlags.length > 0).length}
                     </div>
-                    <div className="text-gray-600">Candidats qualifiés</div>
+                    <div className="text-gray-600">Alertes détectées</div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Liste des candidats avec détails améliorés */}
+              {/* Liste des candidats avec nouveau composant */}
               <div className="space-y-4">
                 {analysisResults.map((result, index) => (
-                  <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4 mb-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-600 rounded-full flex items-center justify-center text-white font-bold">
-                              #{result.rank}
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-semibold text-gray-900">{result.fileName}</h3>
-                              <p className="text-gray-600">{result.experience} • {result.education}</p>
-                            </div>
-                          </div>
-                          
-                          <p className="text-gray-700 mb-3">{result.summary}</p>
-                          
-                          {/* Breakdown des scores */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3 text-sm">
-                            <div className="flex items-center">
-                              <TrendingUp className="w-4 h-4 text-blue-500 mr-1" />
-                              <span>Compétences: {result.breakdown.keywordScore}%</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Users className="w-4 h-4 text-green-500 mr-1" />
-                              <span>Expérience: {result.breakdown.experienceScore}%</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Target className="w-4 h-4 text-purple-500 mr-1" />
-                              <span>Formation: {result.breakdown.educationScore}%</span>
-                            </div>
-                            <div className="flex items-center">
-                              <BarChart3 className="w-4 h-4 text-orange-500 mr-1" />
-                              <span>Certifs: {result.breakdown.certificationScore}%</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            <span className="text-sm font-medium text-gray-600">Points forts :</span>
-                            {result.matchedKeywords.slice(0, 6).map((keyword: string) => (
-                              <Badge key={keyword} className="bg-green-100 text-green-800 text-xs">
-                                {keyword}
-                              </Badge>
-                            ))}
-                          </div>
-                          
-                          {result.missingKeywords.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              <span className="text-sm font-medium text-gray-600">À développer :</span>
-                              {result.missingKeywords.slice(0, 4).map((keyword: string) => (
-                                <Badge key={keyword} variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
-                                  {keyword}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col items-center space-y-3 lg:items-end">
-                          <div className={`text-4xl font-bold px-4 py-2 rounded-lg ${getScoreColor(result.score)}`}>
-                            {result.score}%
-                          </div>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-2" />
-                            Voir le détail
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <CVAnalysisResult 
+                    key={index} 
+                    result={{...result, rank: index + 1}} 
+                    jobTitle={jobTitle}
+                  />
                 ))}
               </div>
 
