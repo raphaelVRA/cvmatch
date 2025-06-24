@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,14 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Upload, Target, ArrowLeft, Users, BarChart3, Download, Eye } from "lucide-react";
+import { Upload, Target, ArrowLeft, Users, BarChart3, Download, Eye, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { JobPositionSelector } from "@/components/JobPositionSelector";
+import { simulateDetailedAnalysis } from "@/utils/cvAnalysis";
+import { getJobPositionById } from "@/data/jobPositions";
 
 const Company = () => {
   const [step, setStep] = useState(1);
   const [jobData, setJobData] = useState({
-    title: "",
+    positionId: "",
+    customTitle: "",
     description: "",
     requirements: "",
     keywords: ""
@@ -25,10 +28,18 @@ const Company = () => {
   const { toast } = useToast();
 
   const handleJobDataSubmit = () => {
-    if (!jobData.title || !jobData.description) {
+    if (!jobData.positionId && !jobData.customTitle) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir au minimum le titre et la description du poste.",
+        description: "Veuillez sélectionner un poste ou saisir un titre personnalisé.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!jobData.description) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir la description du poste.",
         variant: "destructive",
       });
       return;
@@ -53,35 +64,42 @@ const Company = () => {
     
     setIsAnalyzing(true);
     
-    // Simulation d'analyse
+    // Simulation d'analyse avec le nouveau système
     await new Promise(resolve => setTimeout(resolve, 4000));
     
-    // Résultats simulés
-    const results = uploadedFiles.map((file, index) => ({
-      fileName: file.name,
-      score: Math.floor(Math.random() * 40) + 60, // Score entre 60-100
-      matchedKeywords: ["React", "JavaScript", "Leadership", "Agile"].slice(0, Math.floor(Math.random() * 4) + 1),
-      missingKeywords: ["Docker", "AWS", "Python"].slice(0, Math.floor(Math.random() * 3) + 1),
-      summary: `Candidat avec ${Math.floor(Math.random() * 8) + 2} ans d'expérience. Profil ${index % 2 === 0 ? 'senior' : 'junior'} avec de bonnes compétences techniques.`,
-      experience: `${Math.floor(Math.random() * 8) + 2} ans`,
-      education: index % 2 === 0 ? "Master" : "Licence",
-      rank: index + 1
-    }));
-    
-    // Trier par score
-    results.sort((a, b) => b.score - a.score);
-    results.forEach((result, index) => {
-      result.rank = index + 1;
-    });
-    
-    setAnalysisResults(results);
-    setIsAnalyzing(false);
-    setStep(3);
+    try {
+      const results = uploadedFiles.map((file) => {
+        // Utilise le poste sélectionné ou un poste par défaut
+        const positionId = jobData.positionId || 'dev-fullstack';
+        return simulateDetailedAnalysis(file.name, positionId);
+      });
+      
+      // Trier par score et ajouter le rang
+      results.sort((a, b) => b.score - a.score);
+      const resultsWithRank = results.map((result, index) => ({
+        ...result,
+        rank: index + 1,
+        experience: `${Math.floor(Math.random() * 8) + 2} ans`,
+        education: index % 2 === 0 ? "Master" : "Licence",
+        summary: `Candidat avec un profil ${result.score >= 80 ? 'excellent' : result.score >= 65 ? 'très bon' : 'prometteur'} pour ce poste.`
+      }));
+      
+      setAnalysisResults(resultsWithRank);
+      setStep(3);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'analyse des CV.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const resetAnalysis = () => {
     setStep(1);
-    setJobData({ title: "", description: "", requirements: "", keywords: "" });
+    setJobData({ positionId: "", customTitle: "", description: "", requirements: "", keywords: "" });
     setUploadedFiles([]);
     setAnalysisResults([]);
   };
@@ -92,6 +110,9 @@ const Company = () => {
     if (score >= 60) return "text-orange-600 bg-orange-50";
     return "text-red-600 bg-red-50";
   };
+
+  const selectedJob = getJobPositionById(jobData.positionId);
+  const jobTitle = selectedJob?.title || jobData.customTitle || "Poste personnalisé";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -147,20 +168,38 @@ const Company = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Décrivez votre poste</CardTitle>
                 <CardDescription className="text-lg">
-                  Plus la description est précise, meilleur sera le matching
+                  Choisissez parmi 25+ métiers prédéfinis ou créez un poste personnalisé
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <Label htmlFor="title" className="text-lg font-medium">
-                    Titre du poste *
+                  <Label htmlFor="position" className="text-lg font-medium">
+                    Type de poste
+                  </Label>
+                  <div className="mt-2">
+                    <JobPositionSelector 
+                      value={jobData.positionId} 
+                      onValueChange={(value) => setJobData({...jobData, positionId: value})}
+                      showCategory={true}
+                    />
+                  </div>
+                </div>
+
+                <div className="text-center text-gray-500">
+                  OU
+                </div>
+
+                <div>
+                  <Label htmlFor="customTitle" className="text-lg font-medium">
+                    Titre personnalisé
                   </Label>
                   <Input
-                    id="title"
-                    value={jobData.title}
-                    onChange={(e) => setJobData({...jobData, title: e.target.value})}
-                    placeholder="Ex: Développeur Full Stack Senior"
+                    id="customTitle"
+                    value={jobData.customTitle}
+                    onChange={(e) => setJobData({...jobData, customTitle: e.target.value})}
+                    placeholder="Ex: Développeur Blockchain Senior"
                     className="mt-2 h-12 text-lg"
+                    disabled={!!jobData.positionId}
                   />
                 </div>
 
@@ -192,13 +231,13 @@ const Company = () => {
 
                 <div>
                   <Label htmlFor="keywords" className="text-lg font-medium">
-                    Mots-clés importants
+                    Mots-clés importants supplémentaires
                   </Label>
                   <Input
                     id="keywords"
                     value={jobData.keywords}
                     onChange={(e) => setJobData({...jobData, keywords: e.target.value})}
-                    placeholder="Ex: React, Node.js, PostgreSQL, Docker (séparés par des virgules)"
+                    placeholder="Ex: Blockchain, Solidity, Web3 (séparés par des virgules)"
                     className="mt-2 h-12"
                   />
                 </div>
@@ -265,10 +304,22 @@ const Company = () => {
                 
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="font-medium text-blue-800 mb-2">Récapitulatif du poste</h3>
-                  <p className="text-blue-700"><strong>Titre :</strong> {jobData.title}</p>
+                  <p className="text-blue-700"><strong>Titre :</strong> {jobTitle}</p>
+                  {selectedJob && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-blue-700"><strong>Compétences requises :</strong></p>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedJob.keywords.required.slice(0, 5).map((keyword) => (
+                          <Badge key={keyword} variant="secondary" className="text-xs">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {jobData.keywords && (
                     <p className="text-blue-700 mt-1">
-                      <strong>Mots-clés :</strong> {jobData.keywords}
+                      <strong>Mots-clés supplémentaires :</strong> {jobData.keywords}
                     </p>
                   )}
                 </div>
@@ -307,7 +358,7 @@ const Company = () => {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900">Classement des candidats</h2>
-                  <p className="text-gray-600">Pour le poste : <strong>{jobData.title}</strong></p>
+                  <p className="text-gray-600">Pour le poste : <strong>{jobTitle}</strong></p>
                 </div>
                 <div className="flex space-x-3">
                   <Button variant="outline">
@@ -320,8 +371,8 @@ const Company = () => {
                 </div>
               </div>
 
-              {/* Statistiques */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Statistiques améliorées */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="border-0 shadow-lg">
                   <CardContent className="p-6 text-center">
                     <div className="text-3xl font-bold text-blue-600 mb-2">
@@ -346,9 +397,17 @@ const Company = () => {
                     <div className="text-gray-600">Score moyen</div>
                   </CardContent>
                 </Card>
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-3xl font-bold text-purple-600 mb-2">
+                      {analysisResults.filter(r => r.score >= 70).length}
+                    </div>
+                    <div className="text-gray-600">Candidats qualifiés</div>
+                  </CardContent>
+                </Card>
               </div>
 
-              {/* Liste des candidats */}
+              {/* Liste des candidats avec détails améliorés */}
               <div className="space-y-4">
                 {analysisResults.map((result, index) => (
                   <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
@@ -367,10 +426,30 @@ const Company = () => {
                           
                           <p className="text-gray-700 mb-3">{result.summary}</p>
                           
+                          {/* Breakdown des scores */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3 text-sm">
+                            <div className="flex items-center">
+                              <TrendingUp className="w-4 h-4 text-blue-500 mr-1" />
+                              <span>Compétences: {result.breakdown.keywordScore}%</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Users className="w-4 h-4 text-green-500 mr-1" />
+                              <span>Expérience: {result.breakdown.experienceScore}%</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Target className="w-4 h-4 text-purple-500 mr-1" />
+                              <span>Formation: {result.breakdown.educationScore}%</span>
+                            </div>
+                            <div className="flex items-center">
+                              <BarChart3 className="w-4 h-4 text-orange-500 mr-1" />
+                              <span>Certifs: {result.breakdown.certificationScore}%</span>
+                            </div>
+                          </div>
+                          
                           <div className="flex flex-wrap gap-2 mb-3">
-                            <span className="text-sm font-medium text-gray-600">Compétences matchées :</span>
-                            {result.matchedKeywords.map((keyword: string) => (
-                              <Badge key={keyword} className="bg-green-100 text-green-800">
+                            <span className="text-sm font-medium text-gray-600">Points forts :</span>
+                            {result.matchedKeywords.slice(0, 6).map((keyword: string) => (
+                              <Badge key={keyword} className="bg-green-100 text-green-800 text-xs">
                                 {keyword}
                               </Badge>
                             ))}
@@ -379,8 +458,8 @@ const Company = () => {
                           {result.missingKeywords.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                               <span className="text-sm font-medium text-gray-600">À développer :</span>
-                              {result.missingKeywords.map((keyword: string) => (
-                                <Badge key={keyword} variant="secondary" className="bg-orange-100 text-orange-800">
+                              {result.missingKeywords.slice(0, 4).map((keyword: string) => (
+                                <Badge key={keyword} variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
                                   {keyword}
                                 </Badge>
                               ))}
@@ -394,7 +473,7 @@ const Company = () => {
                           </div>
                           <Button variant="outline" size="sm">
                             <Eye className="w-4 h-4 mr-2" />
-                            Voir le CV
+                            Voir le détail
                           </Button>
                         </div>
                       </div>

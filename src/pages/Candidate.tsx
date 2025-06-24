@@ -4,26 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Upload, FileText, Target, BarChart3, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
+import { Upload, FileText, Target, BarChart3, CheckCircle, XCircle, ArrowLeft, TrendingUp, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-
-const jobPositions = [
-  "Développeur Frontend",
-  "Développeur Backend", 
-  "Développeur Full Stack",
-  "Data Scientist",
-  "Product Manager",
-  "UX/UI Designer",
-  "DevOps Engineer",
-  "Assistant RH",
-  "Commercial",
-  "Marketing Manager"
-];
+import { JobPositionSelector } from "@/components/JobPositionSelector";
+import { simulateDetailedAnalysis } from "@/utils/cvAnalysis";
+import { getJobPositionById } from "@/data/jobPositions";
 
 const Candidate = () => {
   const [step, setStep] = useState(1);
@@ -55,28 +44,22 @@ const Candidate = () => {
     
     setIsAnalyzing(true);
     
-    // Simulation d'analyse
+    // Simulation d'analyse avec le nouveau système
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Résultat simulé
-    setAnalysisResult({
-      score: 78,
-      matchedKeywords: ["React", "JavaScript", "TypeScript", "Git", "Agile"],
-      missingKeywords: ["Docker", "AWS", "Node.js"],
-      strengths: [
-        "Excellente expérience en développement frontend",
-        "Maîtrise des technologies modernes",
-        "Projets diversifiés"
-      ],
-      improvements: [
-        "Ajouter une expérience en cloud computing",
-        "Développer les compétences backend",
-        "Obtenir des certifications"
-      ]
-    });
-    
-    setIsAnalyzing(false);
-    setStep(3);
+    try {
+      const result = simulateDetailedAnalysis(selectedFile.name, selectedPosition);
+      setAnalysisResult(result);
+      setStep(3);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'analyse du CV.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const resetAnalysis = () => {
@@ -85,6 +68,8 @@ const Candidate = () => {
     setSelectedPosition("");
     setAnalysisResult(null);
   };
+
+  const selectedJob = getJobPositionById(selectedPosition);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -140,7 +125,7 @@ const Candidate = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Uploadez votre CV</CardTitle>
                 <CardDescription className="text-lg">
-                  Analysez gratuitement votre CV en quelques clics
+                  Analysez gratuitement votre CV avec notre IA avancée
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -191,7 +176,7 @@ const Candidate = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Choisissez le poste visé</CardTitle>
                 <CardDescription className="text-lg">
-                  Sélectionnez le type de poste pour une analyse précise
+                  Plus de 25 métiers disponibles pour une analyse précise
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -199,18 +184,13 @@ const Candidate = () => {
                   <Label htmlFor="position" className="text-lg font-medium">
                     Type de poste
                   </Label>
-                  <Select value={selectedPosition} onValueChange={setSelectedPosition}>
-                    <SelectTrigger className="w-full mt-2 h-12 text-lg">
-                      <SelectValue placeholder="Sélectionnez un poste" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobPositions.map((position) => (
-                        <SelectItem key={position} value={position}>
-                          {position}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="mt-2">
+                    <JobPositionSelector 
+                      value={selectedPosition} 
+                      onValueChange={setSelectedPosition}
+                      showCategory={true}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex space-x-4">
@@ -241,7 +221,7 @@ const Candidate = () => {
           )}
 
           {/* Step 3: Results */}
-          {step === 3 && analysisResult && (
+          {step === 3 && analysisResult && selectedJob && (
             <div className="space-y-6">
               {/* Score principal */}
               <Card className="border-0 shadow-xl bg-gradient-to-r from-blue-600 to-green-600 text-white">
@@ -249,8 +229,41 @@ const Candidate = () => {
                   <CardTitle className="text-3xl mb-2">Score de compatibilité</CardTitle>
                   <div className="text-6xl font-bold mb-4">{analysisResult.score}%</div>
                   <Progress value={analysisResult.score} className="w-full bg-white/20" />
+                  <p className="text-blue-100 mt-2">Pour le poste : {selectedJob.title}</p>
                 </CardHeader>
               </Card>
+
+              {/* Détails du score */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-4 text-center">
+                    <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-blue-600">{analysisResult.breakdown.keywordScore}%</div>
+                    <div className="text-sm text-gray-600">Compétences</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-4 text-center">
+                    <Award className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-green-600">{analysisResult.breakdown.experienceScore}%</div>
+                    <div className="text-sm text-gray-600">Expérience</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-4 text-center">
+                    <Target className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-purple-600">{analysisResult.breakdown.educationScore}%</div>
+                    <div className="text-sm text-gray-600">Formation</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-4 text-center">
+                    <CheckCircle className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-orange-600">{analysisResult.breakdown.certificationScore}%</div>
+                    <div className="text-sm text-gray-600">Certifications</div>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Mots-clés */}
               <div className="grid md:grid-cols-2 gap-6">
@@ -258,12 +271,12 @@ const Candidate = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center text-green-600">
                       <CheckCircle className="w-6 h-6 mr-2" />
-                      Mots-clés trouvés
+                      Compétences identifiées ({analysisResult.matchedKeywords.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {analysisResult.matchedKeywords.map((keyword: string) => (
+                      {analysisResult.matchedKeywords.slice(0, 12).map((keyword: string) => (
                         <Badge key={keyword} className="bg-green-100 text-green-800">
                           {keyword}
                         </Badge>
@@ -276,12 +289,12 @@ const Candidate = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center text-orange-600">
                       <XCircle className="w-6 h-6 mr-2" />
-                      Mots-clés manquants
+                      Compétences à développer
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {analysisResult.missingKeywords.map((keyword: string) => (
+                      {analysisResult.missingKeywords.slice(0, 8).map((keyword: string) => (
                         <Badge key={keyword} variant="secondary" className="bg-orange-100 text-orange-800">
                           {keyword}
                         </Badge>
@@ -302,7 +315,7 @@ const Candidate = () => {
                       {analysisResult.strengths.map((strength: string, index: number) => (
                         <li key={index} className="flex items-start">
                           <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{strength}</span>
+                          <span className="text-sm">{strength}</span>
                         </li>
                       ))}
                     </ul>
@@ -311,14 +324,14 @@ const Candidate = () => {
 
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
-                    <CardTitle className="text-orange-600">Axes d'amélioration</CardTitle>
+                    <CardTitle className="text-orange-600">Recommandations</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
                       {analysisResult.improvements.map((improvement: string, index: number) => (
                         <li key={index} className="flex items-start">
                           <Target className="w-5 h-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{improvement}</span>
+                          <span className="text-sm">{improvement}</span>
                         </li>
                       ))}
                     </ul>
