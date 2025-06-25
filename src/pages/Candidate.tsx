@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Upload, FileText, Target, BarChart3, CheckCircle, XCircle, ArrowLeft, TrendingUp, Award, AlertTriangle, Shield, Building } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuota } from "@/hooks/useQuota";
 import { JobPositionSelector } from "@/components/JobPositionSelector";
 import { simulateDetailedAnalysis } from "@/utils/cvAnalysis";
 import { getJobPositionById } from "@/data/jobPositions";
@@ -21,6 +23,8 @@ const Candidate = () => {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { checkQuota, getQuotaInfo, consumeQuota } = useQuota();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -42,6 +46,8 @@ const Candidate = () => {
   const handleAnalysis = async () => {
     if (!selectedFile || !selectedPosition) return;
     
+    if (!checkQuota()) return;
+    
     setIsAnalyzing(true);
     
     // Simulation d'analyse avec le nouveau système
@@ -50,6 +56,7 @@ const Candidate = () => {
     try {
       const result = simulateDetailedAnalysis(selectedFile.name, selectedPosition);
       setAnalysisResult(result);
+      consumeQuota();
       setStep(3);
     } catch (error) {
       toast({
@@ -70,6 +77,7 @@ const Candidate = () => {
   };
 
   const selectedJob = getJobPositionById(selectedPosition);
+  const quotaInfo = getQuotaInfo();
 
   const getConfidenceColor = (level: string) => {
     switch (level) {
@@ -103,12 +111,19 @@ const Candidate = () => {
                 CVMatch
               </h1>
             </Link>
-            <Button variant="outline" asChild>
-              <Link to="/">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour
-              </Link>
-            </Button>
+            <div className="flex items-center space-x-4">
+              {!user && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                  Essai gratuit
+                </Badge>
+              )}
+              <Button variant="outline" asChild>
+                <Link to="/">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -143,7 +158,11 @@ const Candidate = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Uploadez votre CV</CardTitle>
                 <CardDescription className="text-lg">
-                  Analyse IA avancée avec détection d'incohérences
+                  {!user ? (
+                    <>Essai gratuit - Analyse IA avancée avec détection d'incohérences</>
+                  ) : (
+                    <>Analyse IA avancée avec détection d'incohérences</>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -221,7 +240,7 @@ const Candidate = () => {
                   </Button>
                   <Button 
                     onClick={handleAnalysis}
-                    disabled={!selectedPosition || isAnalyzing}
+                    disabled={!selectedPosition || isAnalyzing || quotaInfo.remaining === 0}
                     className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 py-6"
                   >
                     {isAnalyzing ? (
@@ -404,21 +423,40 @@ const Candidate = () => {
                 <Button onClick={resetAnalysis} variant="outline" className="flex-1 py-6">
                   Analyser un autre CV
                 </Button>
-                <Button className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 py-6" asChild>
-                  <Link to="/pricing">
-                    Débloquer plus d'analyses
-                  </Link>
-                </Button>
+                {!user ? (
+                  <Button className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 py-6" asChild>
+                    <Link to="/auth">
+                      Créer un compte pour plus d'analyses
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 py-6" asChild>
+                    <Link to="/pricing">
+                      Débloquer plus d'analyses
+                    </Link>
+                  </Button>
+                )}
               </div>
 
               {/* Limitation */}
               <Card className="border-orange-200 bg-orange-50">
                 <CardContent className="p-4">
                   <p className="text-orange-800 text-center">
-                    <strong>Analyses restantes ce mois : 2/3</strong> - 
-                    <Link to="/pricing" className="text-orange-600 hover:underline ml-1">
-                      Passez au plan Pro pour plus d'analyses
-                    </Link>
+                    {!user ? (
+                      <>
+                        <strong>Essai gratuit utilisé</strong> - 
+                        <Link to="/auth" className="text-orange-600 hover:underline ml-1">
+                          Créez un compte pour 3 analyses gratuites par mois
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <strong>Analyses restantes ce mois : {quotaInfo.remaining}/{quotaInfo.limit}</strong> - 
+                        <Link to="/pricing" className="text-orange-600 hover:underline ml-1">
+                          Passez au plan Pro pour plus d'analyses
+                        </Link>
+                      </>
+                    )}
                   </p>
                 </CardContent>
               </Card>

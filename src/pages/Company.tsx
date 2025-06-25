@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Upload, Target, ArrowLeft, Users, BarChart3, Download, TrendingUp } from "lucide-react";
+import { Upload, Target, ArrowLeft, Users, BarChart3, Download, TrendingUp, Badge } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuota } from "@/hooks/useQuota";
 import { JobPositionSelector } from "@/components/JobPositionSelector";
 import { CVAnalysisResult } from "@/components/CVAnalysisResult";
 import { simulateDetailedAnalysis } from "@/utils/cvAnalysis";
@@ -26,6 +28,8 @@ const Company = () => {
   const [analysisResults, setAnalysisResults] = useState<any[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { checkQuota, getQuotaInfo, consumeQuota } = useQuota();
 
   const handleJobDataSubmit = () => {
     if (!jobData.positionId && !jobData.customTitle) {
@@ -62,6 +66,8 @@ const Company = () => {
   const handleAnalysis = async () => {
     if (uploadedFiles.length === 0) return;
     
+    if (!checkQuota()) return;
+    
     setIsAnalyzing(true);
     
     // Simulation d'analyse avec le nouveau système
@@ -85,6 +91,7 @@ const Company = () => {
       }));
       
       setAnalysisResults(resultsWithRank);
+      consumeQuota();
       setStep(3);
     } catch (error) {
       toast({
@@ -106,6 +113,7 @@ const Company = () => {
 
   const selectedJob = getJobPositionById(jobData.positionId);
   const jobTitle = selectedJob?.title || jobData.customTitle || "Poste personnalisé";
+  const quotaInfo = getQuotaInfo();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -121,12 +129,19 @@ const Company = () => {
                 CVMatch
               </h1>
             </Link>
-            <Button variant="outline" asChild>
-              <Link to="/">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour
-              </Link>
-            </Button>
+            <div className="flex items-center space-x-4">
+              {!user && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                  Essai gratuit
+                </Badge>
+              )}
+              <Button variant="outline" asChild>
+                <Link to="/">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -245,13 +260,16 @@ const Company = () => {
             </Card>
           )}
 
-          {/* Step 2: CV Upload */}
+          {/* Step 2: CV Upload with quota check */}
           {step === 2 && (
             <Card className="border-0 shadow-xl">
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Uploadez les CV</CardTitle>
                 <CardDescription className="text-lg">
                   Sélectionnez tous les CV à analyser (format PDF)
+                  {!user && quotaInfo.remaining === 0 && (
+                    <span className="block text-red-600 mt-2">Essai gratuit utilisé - Créez un compte pour continuer</span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -303,7 +321,7 @@ const Company = () => {
                   </Button>
                   <Button 
                     onClick={handleAnalysis}
-                    disabled={uploadedFiles.length === 0 || isAnalyzing}
+                    disabled={uploadedFiles.length === 0 || isAnalyzing || quotaInfo.remaining === 0}
                     className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 py-6"
                   >
                     {isAnalyzing ? (
@@ -391,10 +409,21 @@ const Company = () => {
               <Card className="border-orange-200 bg-orange-50">
                 <CardContent className="p-4">
                   <p className="text-orange-800 text-center">
-                    <strong>Analyses restantes ce mois : 7/10</strong> - 
-                    <Link to="/pricing" className="text-orange-600 hover:underline ml-1">
-                      Augmentez votre limite avec le plan Pro
-                    </Link>
+                    {!user ? (
+                      <>
+                        <strong>Essai gratuit utilisé</strong> - 
+                        <Link to="/auth" className="text-orange-600 hover:underline ml-1">
+                          Créez un compte pour 10 analyses gratuites par mois
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <strong>Analyses restantes ce mois : {quotaInfo.remaining}/{quotaInfo.limit}</strong> - 
+                        <Link to="/pricing" className="text-orange-600 hover:underline ml-1">
+                          Augmentez votre limite avec le plan Pro
+                        </Link>
+                      </>
+                    )}
                   </p>
                 </CardContent>
               </Card>

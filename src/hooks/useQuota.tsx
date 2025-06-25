@@ -14,7 +14,7 @@ const QUOTA_LIMITS: QuotaLimits = {
 };
 
 export const useQuota = () => {
-  const { user, profile, getMonthlyUsage } = useAuth();
+  const { user, profile, getMonthlyUsage, hasUsedFreeTrial, useFreeTrial } = useAuth();
   const [usage, setUsage] = useState(0);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -37,6 +37,20 @@ export const useQuota = () => {
   }, [user, profile]);
 
   const checkQuota = (): boolean => {
+    // Si l'utilisateur n'est pas connecté, vérifier l'essai gratuit
+    if (!user) {
+      if (hasUsedFreeTrial) {
+        toast({
+          title: "Essai gratuit utilisé",
+          description: "Créez un compte pour continuer à utiliser CVMatch avec 3 analyses gratuites par mois.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      // Permettre l'essai gratuit
+      return true;
+    }
+    
     if (!profile) return false;
     
     const limit = QUOTA_LIMITS[profile.account_type as keyof QuotaLimits];
@@ -53,8 +67,23 @@ export const useQuota = () => {
     return hasQuota;
   };
 
+  const consumeQuota = () => {
+    if (!user && !hasUsedFreeTrial) {
+      useFreeTrial();
+    }
+  };
+
   const getQuotaInfo = () => {
-    if (!profile) return { used: 0, limit: 0, remaining: 0 };
+    if (!user) {
+      return {
+        used: hasUsedFreeTrial ? 1 : 0,
+        limit: 1,
+        remaining: hasUsedFreeTrial ? 0 : 1,
+        isTrial: true
+      };
+    }
+    
+    if (!profile) return { used: 0, limit: 0, remaining: 0, isTrial: false };
     
     const limit = QUOTA_LIMITS[profile.account_type as keyof QuotaLimits];
     const remaining = Math.max(0, limit - usage);
@@ -62,7 +91,8 @@ export const useQuota = () => {
     return {
       used: usage,
       limit,
-      remaining
+      remaining,
+      isTrial: false
     };
   };
 
@@ -71,6 +101,7 @@ export const useQuota = () => {
     loading,
     checkQuota,
     getQuotaInfo,
-    refreshUsage: fetchUsage
+    refreshUsage: fetchUsage,
+    consumeQuota
   };
 };

@@ -26,12 +26,12 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/candidate" element={
-              <ProtectedRoute accountType="candidate">
+              <ProtectedRoute accountType="candidate" allowTrial={true}>
                 <Candidate />
               </ProtectedRoute>
             } />
             <Route path="/company" element={
-              <ProtectedRoute accountType="company">
+              <ProtectedRoute accountType="company" allowTrial={true}>
                 <Company />
               </ProtectedRoute>
             } />

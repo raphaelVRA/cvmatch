@@ -12,6 +12,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   getMonthlyUsage: () => Promise<number>;
+  hasUsedFreeTrial: boolean;
+  useFreeTrial: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,8 +23,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [hasUsedFreeTrial, setHasUsedFreeTrial] = useState(false);
 
   useEffect(() => {
+    // Check if user has already used free trial
+    const freeTrialUsed = localStorage.getItem('cvmatch_free_trial_used');
+    setHasUsedFreeTrial(freeTrialUsed === 'true');
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -102,6 +109,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const useFreeTrial = () => {
+    localStorage.setItem('cvmatch_free_trial_used', 'true');
+    setHasUsedFreeTrial(true);
+  };
+
   const value = {
     user,
     session,
@@ -110,7 +122,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signUp,
     signIn,
     signOut,
-    getMonthlyUsage
+    getMonthlyUsage,
+    hasUsedFreeTrial,
+    useFreeTrial
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
