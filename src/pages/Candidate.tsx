@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +14,8 @@ import { useQuota } from "@/hooks/useQuota";
 import { JobPositionSelector } from "@/components/JobPositionSelector";
 import { simulateDetailedAnalysis } from "@/utils/cvAnalysis";
 import { getJobPositionById } from "@/data/jobPositions";
+import { extractTextFromPDF } from "@/utils/pdfExtractor";
+import { analyzeRealCV } from "@/utils/realCvAnalyzer";
 
 const Candidate = () => {
   const [step, setStep] = useState(1);
@@ -50,18 +51,37 @@ const Candidate = () => {
     
     setIsAnalyzing(true);
     
-    // Simulation d'analyse avec le nouveau système
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
     try {
-      const result = simulateDetailedAnalysis(selectedFile.name, selectedPosition);
+      toast({
+        title: "Extraction en cours",
+        description: "Extraction du contenu du CV...",
+      });
+      
+      // Extraction réelle du PDF
+      const extractedData = await extractTextFromPDF(selectedFile);
+      
+      toast({
+        title: "Analyse en cours",
+        description: "Analyse IA des compétences et expériences...",
+      });
+      
+      // Analyse réelle du CV
+      const result = analyzeRealCV(extractedData, getJobPositionById(selectedPosition)!);
+      
       setAnalysisResult(result);
       consumeQuota();
       setStep(3);
-    } catch (error) {
+      
       toast({
-        title: "Erreur",
-        description: "Erreur lors de l'analyse du CV.",
+        title: "Analyse terminée",
+        description: `Score obtenu: ${result.score}%`,
+      });
+      
+    } catch (error) {
+      console.error("Error analyzing CV:", error);
+      toast({
+        title: "Erreur d'analyse",
+        description: error instanceof Error ? error.message : "Erreur lors de l'analyse du CV.",
         variant: "destructive",
       });
     } finally {
@@ -159,9 +179,9 @@ const Candidate = () => {
                 <CardTitle className="text-3xl mb-2">Uploadez votre CV</CardTitle>
                 <CardDescription className="text-lg">
                   {!user ? (
-                    <>Essai gratuit - Analyse IA avancée avec détection d'incohérences</>
+                    <>Essai gratuit - Analyse IA réelle avec extraction PDF</>
                   ) : (
-                    <>Analyse IA avancée avec détection d'incohérences</>
+                    <>Analyse IA réelle avec extraction PDF avancée</>
                   )}
                 </CardDescription>
               </CardHeader>
@@ -213,7 +233,7 @@ const Candidate = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-2">Choisissez le poste visé</CardTitle>
                 <CardDescription className="text-lg">
-                  Analyse précise parmi 25+ métiers spécialisés
+                  Analyse précise avec extraction réelle du contenu PDF
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -246,10 +266,10 @@ const Candidate = () => {
                     {isAnalyzing ? (
                       <>
                         <BarChart3 className="w-5 h-5 mr-2 animate-spin" />
-                        Analyse IA en cours...
+                        Analyse réelle en cours...
                       </>
                     ) : (
-                      "Analyser mon CV"
+                      "Analyser mon CV (réel)"
                     )}
                   </Button>
                 </div>
@@ -260,7 +280,7 @@ const Candidate = () => {
           {/* Step 3: Results */}
           {step === 3 && analysisResult && selectedJob && (
             <div className="space-y-6">
-              {/* Score principal avec niveau de confiance */}
+              {/* Score principal avec informations extraites */}
               <Card className="border-0 shadow-xl bg-gradient-to-r from-blue-600 to-green-600 text-white">
                 <CardHeader className="text-center">
                   <div className="flex items-center justify-center space-x-3 mb-2">
@@ -273,8 +293,44 @@ const Candidate = () => {
                   <div className="text-6xl font-bold mb-4">{analysisResult.score}%</div>
                   <Progress value={analysisResult.score} className="w-full bg-white/20" />
                   <p className="text-blue-100 mt-2">Pour le poste : {selectedJob.title}</p>
+                  {analysisResult.extractedInfo?.name && (
+                    <p className="text-blue-100 text-sm">Candidat : {analysisResult.extractedInfo.name}</p>
+                  )}
                 </CardHeader>
               </Card>
+
+              {/* Informations extraites du CV */}
+              {analysisResult.extractedInfo && (
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-green-600">Informations extraites du CV</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid md:grid-cols-2 gap-4">
+                    {analysisResult.extractedInfo.email && (
+                      <div>
+                        <strong>Email :</strong> {analysisResult.extractedInfo.email}
+                      </div>
+                    )}
+                    {analysisResult.extractedInfo.phone && (
+                      <div>
+                        <strong>Téléphone :</strong> {analysisResult.extractedInfo.phone}
+                      </div>
+                    )}
+                    <div>
+                      <strong>Compétences identifiées :</strong> {analysisResult.extractedInfo.skills.length}
+                    </div>
+                    <div>
+                      <strong>Expériences trouvées :</strong> {analysisResult.extractedInfo.experience.length}
+                    </div>
+                    <div>
+                      <strong>Formations :</strong> {analysisResult.extractedInfo.education.length}
+                    </div>
+                    <div>
+                      <strong>Langues :</strong> {analysisResult.extractedInfo.languages.join(', ') || 'Non spécifiées'}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Alertes d'incohérence */}
               {analysisResult.warningFlags && analysisResult.warningFlags.length > 0 && (
