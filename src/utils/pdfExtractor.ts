@@ -1,4 +1,3 @@
-
 export interface ExtractedCVData {
   text: string;
   metadata: {
@@ -49,9 +48,7 @@ export const extractTextFromPDF = async (file: File): Promise<ExtractedCVData> =
     
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ 
-      data: arrayBuffer,
-      // Désactiver le worker en mode développement si nécessaire
-      disableWorker: import.meta.env.DEV
+      data: arrayBuffer
     }).promise;
     
     console.log(`[PDF Extractor] PDF loaded, ${pdf.numPages} pages`);
