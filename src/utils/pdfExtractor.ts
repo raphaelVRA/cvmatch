@@ -1,3 +1,4 @@
+
 export interface ExtractedCVData {
   text: string;
   metadata: {
@@ -37,17 +38,21 @@ export const extractTextFromPDF = async (file: File): Promise<ExtractedCVData> =
   try {
     console.log(`[PDF Extractor] Starting extraction for ${file.name}`);
     
-    // Import dynamique de pdfjs-dist pour éviter les problèmes de worker
+    // Import dynamique de pdfjs-dist
     const pdfjsLib = await import('pdfjs-dist');
     
-    // Configuration du worker pour Vite
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.min.js',
-      import.meta.url
-    ).toString();
+    // Configuration du worker pour Vite - version corrigée
+    if (typeof window !== 'undefined') {
+      // En mode développement, utiliser le CDN
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+    }
     
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjsLib.getDocument({ 
+      data: arrayBuffer,
+      // Désactiver le worker en mode développement si nécessaire
+      disableWorker: import.meta.env.DEV
+    }).promise;
     
     console.log(`[PDF Extractor] PDF loaded, ${pdf.numPages} pages`);
     
