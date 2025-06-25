@@ -1,4 +1,3 @@
-
 export interface ExtractedCVData {
   text: string;
   metadata: {
@@ -21,6 +20,17 @@ export interface ExtractedCVData {
     certifications: string[];
     languages: string[];
   };
+}
+
+// Interface pour typer les métadonnées PDF
+interface PDFMetadataInfo {
+  Title?: string;
+  Author?: string;
+  Creator?: string;
+  Subject?: string;
+  Keywords?: string;
+  CreationDate?: Date;
+  ModDate?: Date;
 }
 
 export const extractTextFromPDF = async (file: File): Promise<ExtractedCVData> => {
@@ -58,8 +68,9 @@ export const extractTextFromPDF = async (file: File): Promise<ExtractedCVData> =
     console.log(`[PDF Extractor] Text extracted, ${fullText.length} characters`);
     console.log(`[PDF Extractor] First 500 chars:`, fullText.substring(0, 500));
     
-    // Extraction des métadonnées
+    // Extraction des métadonnées avec typage approprié
     const metadata = await pdf.getMetadata();
+    const metadataInfo = metadata.info as PDFMetadataInfo;
     
     // Analyse et extraction d'informations structurées
     const extractedInfo = extractStructuredInfo(fullText);
@@ -68,13 +79,13 @@ export const extractTextFromPDF = async (file: File): Promise<ExtractedCVData> =
       text: fullText,
       metadata: {
         pageCount: pdf.numPages,
-        title: metadata.info?.Title,
-        author: metadata.info?.Author,
-        creator: metadata.info?.Creator,
-        subject: metadata.info?.Subject,
-        keywords: metadata.info?.Keywords,
-        creationDate: metadata.info?.CreationDate,
-        modificationDate: metadata.info?.ModDate,
+        title: metadataInfo?.Title,
+        author: metadataInfo?.Author,
+        creator: metadataInfo?.Creator,
+        subject: metadataInfo?.Subject,
+        keywords: metadataInfo?.Keywords,
+        creationDate: metadataInfo?.CreationDate,
+        modificationDate: metadataInfo?.ModDate,
       },
       extractedInfo
     };
