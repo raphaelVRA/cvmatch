@@ -14,6 +14,7 @@ import { JobPositionSelector } from "@/components/JobPositionSelector";
 import { CVAnalysisResult } from "@/components/CVAnalysisResult";
 import { simulateDetailedAnalysis } from "@/utils/cvAnalysis";
 import { getJobPositionById } from "@/data/jobPositions";
+import { Badge as BadgeComponent } from "@/components/ui/badge";
 
 const Company = () => {
   const [step, setStep] = useState(1);
@@ -131,9 +132,9 @@ const Company = () => {
             </Link>
             <div className="flex items-center space-x-4">
               {!user && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                <BadgeComponent variant="outline" className="bg-blue-50 text-blue-700">
                   Essai gratuit
-                </Badge>
+                </BadgeComponent>
               )}
               <Button variant="outline" asChild>
                 <Link to="/">
