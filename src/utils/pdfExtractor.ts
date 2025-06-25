@@ -1,3 +1,4 @@
+
 export interface ExtractedCVData {
   text: string;
   metadata: {
@@ -40,10 +41,10 @@ export const extractTextFromPDF = async (file: File): Promise<ExtractedCVData> =
     // Import dynamique de pdfjs-dist
     const pdfjsLib = await import('pdfjs-dist');
     
-    // Configuration du worker pour Vite - version corrigée
+    // Configuration du worker pour Vite - version corrigée pour correspondre à 5.3.31
     if (typeof window !== 'undefined') {
-      // En mode développement, utiliser le CDN
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+      // Utiliser la version correcte du worker qui correspond à pdfjs-dist 5.3.31
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js`;
     }
     
     const arrayBuffer = await file.arrayBuffer();
